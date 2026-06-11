@@ -1255,7 +1255,7 @@
             <label class="block text-xs font-bold text-midnight mb-1">
               {{ editingId ? 'Kata Sandi Baru (Kosongkan jika tidak diubah)' : 'Kata Sandi Baru' }}
             </label>
-            <input type="password" v-model="studentForm.password" :required="!editingId" minlength="6" placeholder="Minimal 6 karakter" class="w-full px-3 py-2 text-xs border border-parchment-dark rounded outline-none focus:border-teal text-midnight">
+            <input type="password" v-model="studentForm.password" :required="!editingId" :minlength="!editingId || studentForm.password ? 6 : null" placeholder="Minimal 6 karakter" class="w-full px-3 py-2 text-xs border border-parchment-dark rounded outline-none focus:border-teal text-midnight">
           </div>
 
           <div class="pt-4 flex justify-end gap-3">
@@ -2028,6 +2028,10 @@ export default {
         
         if (this.editingId) {
           url = `/api/admin/students/${this.editingId}/update`;
+          // If editing and password is empty, remove it from payload to prevent validation triggers
+          if (!payload.password) {
+            delete payload.password;
+          }
         }
         
         const res = await axios.post(url, payload);
