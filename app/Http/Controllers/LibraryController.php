@@ -216,7 +216,7 @@ class LibraryController extends Controller
         // Log and Notify
         DB::table('circulation_logs')->insert([
             'activity' => 'Peminjaman Buku',
-            'detail' => "Mahasiswa {$user->name} meminjam '{$book->title}'. Kembali pada: {$dueDate->toLocaleDateString('id-ID')}.",
+            'detail' => "Mahasiswa {$user->name} meminjam '{$book->title}'. Kembali pada: {$dueDate->locale('id')->isoFormat('D MMM YYYY')}.",
             'timestamp' => $simDate,
             'created_at' => now(),
             'updated_at' => now()
@@ -225,7 +225,7 @@ class LibraryController extends Controller
         DB::table('notifications')->insert([
             'user_id' => $user->id,
             'title' => 'Peminjaman Berhasil',
-            'message' => "Anda berhasil meminjam '{$book->title}'. Tanggal Jatuh Tempo: {$dueDate->toLocaleDateString('id-ID')}.",
+            'message' => "Anda berhasil meminjam '{$book->title}'. Tanggal Jatuh Tempo: {$dueDate->locale('id')->isoFormat('D MMM YYYY')}.",
             'type' => 'info',
             'is_read' => false,
             'created_at' => $simDate,
@@ -261,7 +261,7 @@ class LibraryController extends Controller
 
         DB::table('circulation_logs')->insert([
             'activity' => 'Pengembalian Buku',
-            'detail' => "Mahasiswa {$user->name} mengembalikan '{$book->title}' yang dipinjam pada " . Carbon::parse($loan->borrow_date)->toLocaleDateString('id-ID') . ".",
+            'detail' => "Mahasiswa {$user->name} mengembalikan '{$book->title}' yang dipinjam pada " . Carbon::parse($loan->borrow_date)->locale('id')->isoFormat('D MMM YYYY') . ".",
             'timestamp' => $simDate,
             'created_at' => now(),
             'updated_at' => now()
@@ -316,7 +316,7 @@ class LibraryController extends Controller
             DB::table('notifications')->insert([
                 'user_id' => $nextUser->id,
                 'title' => 'Reservasi Siap & Dipinjam',
-                'message' => "Buku '{$book->title}' yang Anda antre sekarang tersedia dan otomatis dipinjamkan ke akun Anda. Jatuh tempo: {$dueDate->toLocaleDateString('id-ID')}.",
+                'message' => "Buku '{$book->title}' yang Anda antre sekarang tersedia dan otomatis dipinjamkan ke akun Anda. Jatuh tempo: {$dueDate->locale('id')->isoFormat('D MMM YYYY')}.",
                 'type' => 'hold',
                 'is_read' => false,
                 'created_at' => $simDate,
@@ -669,7 +669,7 @@ class LibraryController extends Controller
                 DB::table('notifications')->insert([
                     'user_id' => $user->id,
                     'title' => 'PEMBERITAHUAN JATUH TEMPO',
-                    'message' => "Peminjaman buku '{$title}' telah melewati batas tanggal pengembalian (" . $dueDate->toLocaleDateString('id-ID') . "). Segera kembalikan ke pustakawan untuk menghindari sanksi administratif tambahan.",
+                    'message' => "Peminjaman buku '{$title}' telah melewati batas tanggal pengembalian (" . $dueDate->locale('id')->isoFormat('D MMM YYYY') . "). Segera kembalikan ke pustakawan untuk menghindari sanksi administratif tambahan.",
                     'type' => 'warning',
                     'is_read' => false,
                     'created_at' => $simDate,
@@ -699,7 +699,7 @@ class LibraryController extends Controller
                     DB::table('notifications')->insert([
                         'user_id' => $user->id,
                         'title' => 'Pengingat Jatuh Tempo',
-                        'message' => "Peminjaman buku '{$title}' akan jatuh tempo pada " . $dueDate->toLocaleDateString('id-ID') . ". Mohon kembalikan tepat waktu.",
+                        'message' => "Peminjaman buku '{$title}' akan jatuh tempo pada " . $dueDate->locale('id')->isoFormat('D MMM YYYY') . ". Mohon kembalikan tepat waktu.",
                         'type' => 'info',
                         'is_read' => false,
                         'created_at' => $simDate,
@@ -788,7 +788,7 @@ class LibraryController extends Controller
         DB::table('notifications')->insert([
             'user_id' => $studentId,
             'title' => 'Buku Dipinjamkan oleh Pustakawan',
-            'message' => "Pustakawan telah mendaftarkan peminjaman '{$book->title}' untuk Anda. Tanggal Jatuh Tempo: {$dueDate->toLocaleDateString('id-ID')}.",
+            'message' => "Pustakawan telah mendaftarkan peminjaman '{$book->title}' untuk Anda. Tanggal Jatuh Tempo: {$dueDate->locale('id')->isoFormat('D MMM YYYY')}.",
             'type' => 'info',
             'is_read' => false,
             'created_at' => $simDate,
@@ -944,7 +944,7 @@ class LibraryController extends Controller
             DB::table('notifications')->insert([
                 'user_id' => $nextUser->id,
                 'title' => 'Reservasi Siap & Dipinjam',
-                'message' => "Buku '{$book->title}' yang Anda antre sekarang tersedia dan otomatis dipinjamkan ke akun Anda. Jatuh tempo: {$dueDate->toLocaleDateString('id-ID')}.",
+                'message' => "Buku '{$book->title}' yang Anda antre sekarang tersedia dan otomatis dipinjamkan ke akun Anda. Jatuh tempo: {$dueDate->locale('id')->isoFormat('D MMM YYYY')}.",
                 'type' => 'hold',
                 'is_read' => false,
                 'created_at' => $simDate,
