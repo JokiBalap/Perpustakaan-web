@@ -30,6 +30,7 @@ class AppServiceProvider extends ServiceProvider
 
     /**
      * Helper to render Vite assets in Laravel 8
+     * Uses the current request base URL so it works with ngrok, localhost, etc.
      *
      * @param array|string $assets
      * @return string
@@ -41,23 +42,34 @@ class AppServiceProvider extends ServiceProvider
             $assets = explode(',', $cleaned);
         }
 
+        // Get base URL from the current request (works with ngrok, localhost, any domain)
+        try {
+            $request = app('request');
+            $baseUrl = $request->getSchemeAndHttpHost();
+        } catch (\Exception $e) {
+            $baseUrl = config('app.url', 'http://localhost:8000');
+        }
+
         $html = '';
         $manifestPath = public_path('build/manifest.json');
 
         if (file_exists($manifestPath)) {
             $manifest = json_decode(file_get_contents($manifestPath), true);
             foreach ($assets as $asset) {
+                $asset = trim($asset);
                 if (isset($manifest[$asset])) {
-                    $fileUrl = asset('build/' . $manifest[$asset]['file']);
-                    if (substr($fileUrl, -4) === '.css') {
+                    $file = $manifest[$asset]['file'];
+                    $fileUrl = $baseUrl . '/build/' . $file;
+
+                    if (substr($file, -4) === '.css') {
                         $html .= "<link rel=\"stylesheet\" href=\"{$fileUrl}\">\n";
-                    } elseif (substr($fileUrl, -3) === '.js') {
+                    } elseif (substr($file, -3) === '.js') {
                         $html .= "<script type=\"module\" src=\"{$fileUrl}\"></script>\n";
-                        
+
                         // Load accompanying CSS files if any
                         if (isset($manifest[$asset]['css'])) {
                             foreach ($manifest[$asset]['css'] as $cssFile) {
-                                $cssUrl = asset('build/' . $cssFile);
+                                $cssUrl = $baseUrl . '/build/' . $cssFile;
                                 $html .= "<link rel=\"stylesheet\" href=\"{$cssUrl}\">\n";
                             }
                         }
@@ -65,11 +77,13 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
         } else {
+            // Fallback: no manifest (dev mode without Vite running)
             foreach ($assets as $asset) {
+                $asset = trim($asset);
                 if (substr($asset, -4) === '.css') {
-                    $html .= "<link rel=\"stylesheet\" href=\"" . asset($asset) . "\">\n";
+                    $html .= "<link rel=\"stylesheet\" href=\"{$baseUrl}/{$asset}\">\n";
                 } else {
-                    $html .= "<script type=\"module\" src=\"" . asset($asset) . "\"></script>\n";
+                    $html .= "<script type=\"module\" src=\"{$baseUrl}/{$asset}\"></script>\n";
                 }
             }
         }
