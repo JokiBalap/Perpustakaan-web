@@ -63,6 +63,24 @@ class AuthController extends Controller
         return redirect('/login');
     }
 
+    public function logoutGet(Request $request)
+    {
+        if (Auth::check()) {
+            $user = Auth::user();
+            \DB::table('circulation_logs')->insert([
+                'activity' => 'User Logout',
+                'detail' => "{$user->role} {$user->name} ({$user->nim}) keluar dari sistem.",
+                'timestamp' => $this->CarbonSimDate(),
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+        return redirect('/login');
+    }
+
     public function getAuthState()
     {
         if (Auth::check()) {

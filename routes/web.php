@@ -20,7 +20,7 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth');
-Route::get('/logout', [AuthController::class, 'logout'])->middleware('auth');
+Route::get('/logout', [AuthController::class, 'logoutGet']);
 
 // Main App Dashboard View
 Route::get('/', function () {
