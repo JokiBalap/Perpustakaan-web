@@ -1243,6 +1243,18 @@
 <script>
 import axios from 'axios';
 
+// Global interceptor: redirect to login on any 401 (session expired)
+axios.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response && error.response.status === 401) {
+      window.location.href = '/login';
+      return new Promise(() => {}); // prevent further catch handling
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default {
   name: 'LibraryApp',
   data() {
@@ -1426,6 +1438,10 @@ export default {
           this.librarianModeActive = true;
         }
       } catch (err) {
+        if (err.response && err.response.status === 401) {
+          window.location.href = '/login';
+          return;
+        }
         this.showToastMsg('Gagal memuat status dari server.', 'danger');
       }
     },
