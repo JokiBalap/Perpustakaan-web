@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LibraryController;
+use App\Http\Controllers\BackupController;
 
 /*
 |--------------------------------------------------------------------------
@@ -48,6 +49,10 @@ Route::group(['prefix' => 'api', 'middleware' => 'auth'], function () {
     Route::post('/admin/students', [LibraryController::class, 'adminCreateStudent']);
     Route::post('/admin/students/{id}/update', [LibraryController::class, 'adminUpdateStudent']);
     Route::delete('/admin/students/{id}', [LibraryController::class, 'adminDestroyStudent']);
+    
+    // Admin specific backups
+    Route::get('/admin/backup-status', [BackupController::class, 'getBackupStatus']);
+    Route::post('/admin/backup-gdrive', [BackupController::class, 'backupToGoogleDrive']);
     
     Route::post('/reservations', [LibraryController::class, 'joinReservation']);
     Route::post('/reservations/cancel', [LibraryController::class, 'cancelReservation']);

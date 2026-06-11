@@ -53,6 +53,9 @@
           <button v-if="currentUser.role === 'Pustakawan'" @click="setViewTab('admin-students')" :class="['px-3 py-2 text-sm font-semibold rounded-lg transition-colors flex items-center gap-2', activeTab === 'admin-students' ? 'bg-teal text-white' : 'hover:bg-midnight-light text-parchment text-opacity-80']">
             <i class="fa-solid fa-users"></i> Data Mahasiswa
           </button>
+          <button v-if="currentUser.role === 'Pustakawan'" @click="setViewTab('admin-backup')" :class="['px-3 py-2 text-sm font-semibold rounded-lg transition-colors flex items-center gap-2', activeTab === 'admin-backup' ? 'bg-teal text-white' : 'hover:bg-midnight-light text-parchment text-opacity-80']">
+            <i class="fa-solid fa-cloud-arrow-up"></i> Backup Data
+          </button>
           <button @click="setViewTab('notifications')" :class="['px-3 py-2 text-sm font-semibold rounded-lg transition-colors flex items-center gap-2 relative', activeTab === 'notifications' ? 'bg-teal text-white' : 'hover:bg-midnight-light text-parchment text-opacity-80']">
             <i class="fa-solid fa-bell"></i> Notifikasi
             <span v-if="unreadNotifsCount > 0" class="absolute -top-1 -right-1 bg-danger text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold border-2 border-midnight">
@@ -944,6 +947,154 @@
         </div>
       </section>
 
+      <!-- 7.5 GOOGLE DRIVE BACKUP SECTION (LIBRARIAN ONLY) -->
+      <section v-if="activeTab === 'admin-backup' && currentUser.role === 'Pustakawan'" class="animate-fadeIn space-y-6">
+        <div class="flex justify-between items-center border-b border-parchment-dark pb-3">
+          <h2 class="text-xl font-bold text-midnight flex items-center gap-2">
+            <i class="fa-solid fa-cloud-arrow-up text-teal"></i> Backup & Sinkronisasi Google Drive
+          </h2>
+          <span class="text-xs font-semibold text-teal bg-teal/10 px-3 py-1 rounded-full">
+            Admin Portal
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- Left side: Connection status & Trigger button -->
+          <div class="lg:col-span-1 space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-parchment-dark shadow-sm space-y-6">
+              <h3 class="text-sm font-bold text-midnight border-b pb-2 flex items-center gap-2">
+                <i class="fa-solid fa-circle-info text-teal"></i> Status Koneksi
+              </h3>
+
+              <!-- Status Indicator -->
+              <div class="flex items-center gap-4 bg-parchment-light p-4 rounded-xl border border-parchment-dark">
+                <div :class="['h-10 w-10 rounded-full flex items-center justify-center text-white shrink-0', backupStatus.credentials_configured ? 'bg-teal' : 'bg-danger']">
+                  <i :class="['fa-solid text-lg', backupStatus.credentials_configured ? 'fa-circle-check' : 'fa-triangle-exclamation']"></i>
+                </div>
+                <div class="text-left">
+                  <h4 class="font-bold text-xs text-midnight">Kredensial API Google</h4>
+                  <p :class="['text-[11px] font-semibold mt-0.5', backupStatus.credentials_configured ? 'text-teal' : 'text-danger']">
+                    {{ backupStatus.credentials_configured ? 'Terkonfigurasi (Aktif)' : 'Belum Terkonfigurasi' }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Service Account Email -->
+              <div v-if="backupStatus.credentials_configured && backupStatus.client_email" class="space-y-1.5 text-left">
+                <label class="block text-[11px] font-bold text-midnight opacity-75">Email Service Account:</label>
+                <div class="flex items-center gap-2 bg-parchment-light px-3 py-2 border border-parchment-dark rounded-lg text-xs font-mono select-all overflow-hidden relative font-bold">
+                  <span class="truncate pr-8 w-full" :title="backupStatus.client_email">{{ backupStatus.client_email }}</span>
+                  <button @click="copyToClipboard(backupStatus.client_email)" class="absolute right-2 text-teal hover:text-teal-dark" title="Salin Email">
+                    <i class="fa-regular fa-copy"></i>
+                  </button>
+                </div>
+                <p class="text-[9px] text-midnight opacity-70 leading-normal">
+                  <span class="text-teal font-semibold">*Penting:</span> Bagikan folder Google Drive Anda ke email di atas sebagai **Editor** agar sistem dapat melakukan sinkronisasi otomatis.
+                </p>
+              </div>
+
+              <!-- Backup Button -->
+              <div class="space-y-3">
+                <button 
+                  @click="runBackup" 
+                  :disabled="backupLoading || !backupStatus.credentials_configured"
+                  :class="['w-full py-3 text-white rounded-xl font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2', 
+                           backupLoading ? 'bg-teal/50 cursor-not-allowed' : (backupStatus.credentials_configured ? 'bg-teal hover:bg-teal-dark active:scale-[0.98]' : 'bg-midnight/45 cursor-not-allowed')]"
+                >
+                  <i v-if="backupLoading" class="fa-solid fa-spinner fa-spin"></i>
+                  <i v-else class="fa-solid fa-play"></i>
+                  <span>{{ backupLoading ? 'Proses Backup Sedang Berjalan...' : 'Mulai Backup Data Sekarang' }}</span>
+                </button>
+
+                <a :href="backupStatus.folder_url" target="_blank" class="w-full py-2.5 bg-midnight hover:bg-black text-white rounded-xl font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2">
+                  <i class="fa-solid fa-folder-open text-amber"></i>
+                  <span>Buka Folder Google Drive</span>
+                </a>
+              </div>
+            </div>
+
+            <!-- Backup Progress Step Tracker -->
+            <div v-if="backupLoading || backupProgressSteps.length > 0" class="bg-white p-6 rounded-2xl border border-teal/20 shadow-premium text-left space-y-4">
+              <h3 class="text-xs font-bold text-midnight uppercase tracking-wider">Log Aktivitas Backup</h3>
+              <div class="space-y-3">
+                <div v-for="(step, idx) in backupProgressSteps" :key="idx" class="flex gap-3 text-xs items-start">
+                  <div class="mt-0.5 shrink-0">
+                    <i v-if="step.status === 'pending'" class="fa-regular fa-circle text-midnight opacity-40"></i>
+                    <i v-else-if="step.status === 'running'" class="fa-solid fa-circle-notch fa-spin text-teal"></i>
+                    <i v-else-if="step.status === 'success'" class="fa-solid fa-circle-check text-teal"></i>
+                    <i v-else class="fa-solid fa-circle-xmark text-danger"></i>
+                  </div>
+                  <div>
+                    <p :class="['font-semibold', step.status === 'running' ? 'text-teal' : (step.status === 'success' ? 'text-midnight' : (step.status === 'failed' ? 'text-danger' : 'text-midnight opacity-60'))]">{{ step.message }}</p>
+                    <span v-if="step.time" class="text-[9px] text-midnight opacity-50 font-mono">{{ step.time }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right side: Setup instructions & Details checklist -->
+          <div class="lg:col-span-2 space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-parchment-dark shadow-sm text-left space-y-5">
+              <h3 class="text-sm font-bold text-midnight border-b pb-2 flex items-center gap-2">
+                <i class="fa-solid fa-list-check text-teal"></i> Panduan Setup & Sinkronisasi
+              </h3>
+
+              <div class="space-y-4 text-xs text-midnight leading-relaxed">
+                <!-- Checklist Step 1 -->
+                <div class="flex gap-4">
+                  <div class="h-6 w-6 bg-teal/10 text-teal font-extrabold flex items-center justify-center rounded-full shrink-0">1</div>
+                  <div>
+                    <h4 class="font-bold text-xs">Buat Google Cloud Service Account</h4>
+                    <p class="mt-1 opacity-85">Akses <a href="https://console.cloud.google.com/" target="_blank" class="text-teal hover:underline font-bold">Google Cloud Console</a>, buat project baru, cari dan aktifkan <strong>Google Drive API</strong>, lalu buat <strong>Service Account</strong> baru pada menu Credentials.</p>
+                  </div>
+                </div>
+
+                <!-- Checklist Step 2 -->
+                <div class="flex gap-4">
+                  <div class="h-6 w-6 bg-teal/10 text-teal font-extrabold flex items-center justify-center rounded-full shrink-0">2</div>
+                  <div>
+                    <h4 class="font-bold text-xs">Unduh File Kunci Kredensial JSON</h4>
+                    <p class="mt-1 opacity-85">Buka halaman akun layanan yang baru dibuat, masuk ke tab <strong>Keys</strong>, klik <strong>Add Key</strong> > <strong>Create new key</strong>, pilih format <strong>JSON</strong>, lalu unduh kuncinya.</p>
+                  </div>
+                </div>
+
+                <!-- Checklist Step 3 -->
+                <div class="flex gap-4">
+                  <div class="h-6 w-6 bg-teal/10 text-teal font-extrabold flex items-center justify-center rounded-full shrink-0">3</div>
+                  <div>
+                    <h4 class="font-bold text-xs">Simpan Kredensial di Server</h4>
+                    <p class="mt-1 opacity-85">Ganti nama file kunci yang diunduh menjadi <code class="bg-parchment-dark px-1.5 py-0.5 rounded font-mono font-bold text-[11px]">google-credentials.json</code> dan simpan ke folder <code class="bg-parchment-dark px-1.5 py-0.5 rounded font-mono font-bold text-[11px]">storage/app/</code> di direktori root aplikasi Laravel ini.</p>
+                  </div>
+                </div>
+
+                <!-- Checklist Step 4 -->
+                <div class="flex gap-4">
+                  <div class="h-6 w-6 bg-teal/10 text-teal font-extrabold flex items-center justify-center rounded-full shrink-0">4</div>
+                  <div>
+                    <h4 class="font-bold text-xs">Bagikan Akses Folder Google Drive</h4>
+                    <p class="mt-1 opacity-85">Buka folder Google Drive Anda: <a :href="backupStatus.folder_url" target="_blank" class="text-teal hover:underline font-bold font-mono">1k0oyuX4CWvlnt_zppvbwHUWEnsz_132i</a>. Bagikan folder tersebut ke email Service Account (lihat kolom kiri) dengan tingkat akses <strong>Editor</strong>.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Alert Info -->
+              <div class="bg-teal/5 border border-teal/15 p-4 rounded-xl flex gap-3 text-left">
+                <i class="fa-solid fa-circle-info text-teal text-base shrink-0 mt-0.5"></i>
+                <div class="text-xs">
+                  <h4 class="font-bold text-midnight">Format File Hasil Backup</h4>
+                  <p class="opacity-80 mt-1 leading-normal">Setiap kali proses backup dijalankan, sistem akan mengunggah data lengkap dalam dua format sekaligus:</p>
+                  <ul class="list-disc pl-5 mt-1.5 space-y-1 opacity-80 leading-normal">
+                    <li><strong>Workbook Excel (.xlsx)</strong>: Berisi 5 lembar kerja (Sheet) untuk masing-masing tabel database (Buku, Anggota, Peminjaman, Antrean, Log).</li>
+                    <li><strong>Google Sheets (Spreadsheet)</strong>: File terkonversi yang dapat langsung dibuka, diedit, dan dibagikan secara online di Google Drive.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- 8. NOTIFICATIONS SECTION -->
       <section v-if="activeTab === 'notifications'" class="animate-fadeIn space-y-6">
         <h2 class="text-xl font-bold text-midnight flex items-center gap-2"><i class="fa-solid fa-bell text-teal"></i> Pusat Notifikasi</h2>
@@ -1361,7 +1512,16 @@ export default {
         "Fakultas Hukum": [
           "S1 Hukum Bisnis"
         ]
-      }
+      },
+      backupStatus: {
+        credentials_configured: false,
+        client_email: null,
+        project_id: null,
+        folder_id: '',
+        folder_url: ''
+      },
+      backupLoading: false,
+      backupProgressSteps: []
     }
   },
   computed: {
@@ -1448,7 +1608,81 @@ export default {
     async setViewTab(tab) {
       this.activeTab = tab;
       await this.fetchState();
+      if (tab === 'admin-backup') {
+        await this.fetchBackupStatus();
+      }
       window.scrollTo(0, 0);
+    },
+    async fetchBackupStatus() {
+      if (this.currentUser.role !== 'Pustakawan') return;
+      try {
+        const res = await axios.get('/api/admin/backup-status');
+        this.backupStatus = res.data;
+      } catch (err) {
+        console.error(err);
+      }
+    },
+    async runBackup() {
+      if (this.currentUser.role !== 'Pustakawan' || !this.backupStatus.credentials_configured) return;
+      
+      this.backupLoading = true;
+      this.backupProgressSteps = [
+        { message: 'Memulai ekspor database ke file Excel...', status: 'running', time: new Date().toLocaleTimeString() }
+      ];
+
+      try {
+        const backupPromise = axios.post('/api/admin/backup-gdrive');
+        
+        setTimeout(() => {
+          if (this.backupLoading && this.backupProgressSteps.length === 1) {
+            this.backupProgressSteps[0].status = 'success';
+            this.backupProgressSteps.push({
+              message: 'Menghubungkan ke API Google Drive & Mengunggah File...',
+              status: 'running',
+              time: new Date().toLocaleTimeString()
+            });
+          }
+        }, 1500);
+
+        const res = await backupPromise;
+
+        // Mark all previous steps as success
+        this.backupProgressSteps.forEach(s => s.status = 'success');
+        this.backupProgressSteps.push({
+          message: res.data.message || 'Backup selesai diunggah!',
+          status: 'success',
+          time: new Date().toLocaleTimeString()
+        });
+
+        this.showToastMsg(res.data.message || 'Backup berhasil disimpan ke Google Drive!', 'success');
+        await this.fetchState(); // Refresh circulation logs
+      } catch (err) {
+        if (this.backupProgressSteps.length > 0) {
+          this.backupProgressSteps[this.backupProgressSteps.length - 1].status = 'failed';
+        }
+        
+        const errMsg = err.response && err.response.data && err.response.data.message 
+          ? err.response.data.message 
+          : 'Terjadi kesalahan saat mencadangkan data.';
+          
+        this.backupProgressSteps.push({
+          message: 'Error: ' + errMsg,
+          status: 'failed',
+          time: new Date().toLocaleTimeString()
+        });
+
+        this.showToastMsg(errMsg, 'danger');
+      } finally {
+        this.backupLoading = false;
+      }
+    },
+    copyToClipboard(text) {
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        this.showToastMsg('Email Service Account disalin ke clipboard!', 'success');
+      }).catch(err => {
+        this.showToastMsg('Gagal menyalin email.', 'danger');
+      });
     },
     handleHeroSearch() {
       this.searchQuery = this.heroSearchText;
