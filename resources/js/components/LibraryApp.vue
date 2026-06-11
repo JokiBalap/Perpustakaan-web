@@ -1006,6 +1006,14 @@
                   <span>{{ backupLoading ? 'Proses Backup Sedang Berjalan...' : 'Mulai Backup Data Sekarang' }}</span>
                 </button>
 
+                <button 
+                  @click="downloadLocalBackup"
+                  class="w-full py-3 bg-teal hover:bg-teal-dark text-white rounded-xl font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
+                >
+                  <i class="fa-solid fa-file-excel"></i>
+                  <span>Unduh File Excel (.xlsx) Langsung</span>
+                </button>
+
                 <a :href="backupStatus.folder_url" target="_blank" class="w-full py-2.5 bg-midnight hover:bg-black text-white rounded-xl font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2">
                   <i class="fa-solid fa-folder-open text-amber"></i>
                   <span>Buka Folder Google Drive</span>
@@ -1683,6 +1691,10 @@ export default {
       }).catch(err => {
         this.showToastMsg('Gagal menyalin email.', 'danger');
       });
+    },
+    downloadLocalBackup() {
+      window.open('/api/admin/backup-download', '_blank');
+      this.showToastMsg('Memulai unduhan file backup Excel...', 'success');
     },
     handleHeroSearch() {
       this.searchQuery = this.heroSearchText;

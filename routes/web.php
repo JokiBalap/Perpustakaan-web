@@ -52,6 +52,7 @@ Route::group(['prefix' => 'api', 'middleware' => 'auth'], function () {
     
     // Admin specific backups
     Route::get('/admin/backup-status', [BackupController::class, 'getBackupStatus']);
+    Route::get('/admin/backup-download', [BackupController::class, 'downloadLocalBackup']);
     Route::post('/admin/backup-gdrive', [BackupController::class, 'backupToGoogleDrive']);
     
     Route::post('/reservations', [LibraryController::class, 'joinReservation']);
