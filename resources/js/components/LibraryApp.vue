@@ -1683,10 +1683,16 @@ export default {
         this.currentSimTime += 1000;
       }
     }, 1000);
+    this.pollingInterval = setInterval(() => {
+      this.fetchState();
+    }, 5000);
   },
   beforeUnmount() {
     if (this.simTimerInterval) {
       clearInterval(this.simTimerInterval);
+    }
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval);
     }
   },
   methods: {
