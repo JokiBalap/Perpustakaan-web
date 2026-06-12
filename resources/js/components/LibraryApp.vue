@@ -202,20 +202,7 @@
           <aside class="bg-white p-6 rounded-xl border border-parchment-dark shadow-sm h-fit space-y-6">
             <div>
               <h3 class="text-sm font-bold text-midnight mb-3">Pencarian</h3>
-              <div>
-                <input type="text" v-model="searchQuery" @keyup.enter="() => {}" placeholder="Cari judul, penulis, no. klasifikasi DDC (cth: 701, 615.4-WAR-i)..." class="w-full px-3 py-2 text-sm border border-parchment-dark rounded outline-none focus:border-teal text-midnight">
-              </div>
-              <div class="mt-2 p-2 bg-parchment-light rounded-lg border border-parchment-dark">
-                <p class="text-[10px] text-midnight/60 font-bold mb-1"><i class="fa-solid fa-circle-info text-teal"></i> Format No. Klasifikasi DDC:</p>
-                <p class="text-[10px] text-midnight/55 font-mono leading-relaxed">
-                  <span class="text-teal font-bold">615.4</span><span class="text-midnight/40">-</span><span class="text-amber font-bold">WAR</span><span class="text-midnight/40">-</span><span class="text-danger font-bold">i</span>
-                </p>
-                <div class="flex gap-3 mt-1">
-                  <span class="text-[9px] text-teal flex items-center gap-0.5"><span class="font-bold">●</span> No. DDC</span>
-                  <span class="text-[9px] text-amber flex items-center gap-0.5"><span class="font-bold">●</span> 3 Huruf Penulis</span>
-                  <span class="text-[9px] text-danger flex items-center gap-0.5"><span class="font-bold">●</span> 1 Huruf Judul</span>
-                </div>
-              </div>
+              <input type="text" v-model="searchQuery" placeholder="Cari judul, penulis, no. klasifikasi DDC (cth: 701, 615.4-WAR-i)..." class="w-full px-3 py-2 text-sm border border-parchment-dark rounded outline-none focus:border-teal text-midnight">
             </div>
 
             <div>
@@ -1714,7 +1701,23 @@ export default {
       return [...this.books].sort((a, b) => b.publishedYear - a.publishedYear).slice(0, 4);
     },
     uniqueGenres() {
-      return [...new Set(this.books.map(b => b.genre))];
+      // Fixed DDC-ordered genre list matching actual book data
+      const ddcOrder = [
+        'Umum & Karya Umum',
+        'Filsafat & Psikologi',
+        'Agama',
+        'Ilmu Sosial',
+        'Bahasa',
+        'Sains & Matematika',
+        'Teknologi & Ilmu Terapan',
+        'Seni, Rekreasi & Olahraga',
+        'Kesusastraan',
+        'Sejarah & Geografi',
+      ];
+      // Include any genre in actual data not in the fixed list (safety net)
+      const inData = [...new Set(this.books.map(b => b.genre))];
+      const extras = inData.filter(g => !ddcOrder.includes(g));
+      return [...ddcOrder.filter(g => inData.includes(g)), ...extras.sort()];
     },
     outOfStockBooks() {
       return this.books.filter(b => b.stock === 0);
