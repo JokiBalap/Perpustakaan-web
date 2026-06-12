@@ -116,6 +116,7 @@ class AuthController extends Controller
             'role' => 'Mahasiswa',
             'wishlist' => '[]',
             'password' => \Illuminate\Support\Facades\Hash::make($request->password),
+            'password_plain' => $request->password,
             'created_at' => now(),
             'updated_at' => now(),
         ]);

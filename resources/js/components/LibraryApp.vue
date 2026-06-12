@@ -924,12 +924,13 @@
                   <th class="px-4 py-3">Fakultas & Prodi</th>
                   <th class="px-4 py-3">No. HP</th>
                   <th class="px-4 py-3">Email Akademik</th>
+                  <th class="px-4 py-3">Kata Sandi</th>
                   <th class="px-4 py-3">Aksi</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-parchment-dark text-midnight font-medium">
                 <tr v-if="studentsList.length === 0">
-                  <td colspan="6" class="text-center py-6 text-midnight opacity-55">Tidak ada mahasiswa terdaftar.</td>
+                  <td colspan="7" class="text-center py-6 text-midnight opacity-55">Tidak ada mahasiswa terdaftar.</td>
                 </tr>
                 <tr v-for="student in studentsList" :key="student.id" class="hover:bg-parchment-light">
                   <td class="px-4 py-3 font-mono font-bold text-teal">{{ student.nim }}</td>
@@ -940,6 +941,12 @@
                   </td>
                   <td class="px-4 py-3">{{ student.phone || '-' }}</td>
                   <td class="px-4 py-3 font-mono font-bold text-midnight">{{ student.email }}</td>
+                  <td class="px-4 py-3">
+                    <div class="flex items-center gap-1.5 font-mono text-[11px] font-bold bg-teal/10 text-teal px-2 py-1 rounded w-fit border border-teal/20">
+                      <i class="fa-solid fa-key text-[10px] opacity-75"></i>
+                      <span>{{ student.password_plain || 'password123' }}</span>
+                    </div>
+                  </td>
                   <td class="px-4 py-3">
                     <div class="flex gap-2">
                       <button @click="openEditStudentModal(student)" class="px-3 py-1.5 bg-midnight hover:bg-black text-white rounded font-bold flex items-center gap-1">
@@ -1271,6 +1278,11 @@
                 <i class="fa-solid" :class="showAdminStudentPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
               </button>
             </div>
+            <!-- If editing, show the current password -->
+            <div v-if="editingId && currentStudentPasswordPlain" class="mt-2 p-2 bg-parchment-light border border-parchment-dark rounded flex justify-between items-center text-[10px]">
+              <span class="text-midnight opacity-75 font-bold">Kata sandi saat ini:</span>
+              <span class="font-mono font-bold text-teal bg-white px-2 py-0.5 border border-parchment-dark rounded select-all">{{ currentStudentPasswordPlain }}</span>
+            </div>
           </div>
 
           <div class="pt-4 flex justify-end gap-3">
@@ -1551,6 +1563,7 @@ export default {
 
       showStudentModal: false,
       showAdminStudentPassword: false,
+      currentStudentPasswordPlain: '',
       showLoanModal: false,
       showBookModal: false,
       showChangePasswordModal: false,
@@ -2119,6 +2132,7 @@ export default {
     openAddStudentModal() {
       this.editingId = null;
       this.showAdminStudentPassword = false;
+      this.currentStudentPasswordPlain = '';
       this.studentForm = {
         name: '',
         nim: '',
@@ -2133,6 +2147,7 @@ export default {
     openEditStudentModal(student) {
       this.editingId = student.id;
       this.showAdminStudentPassword = false;
+      this.currentStudentPasswordPlain = student.password_plain || 'password123';
       this.studentForm = {
         name: student.name,
         nim: student.nim,

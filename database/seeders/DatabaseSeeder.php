@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             'phone' => '081234567890',
             'wishlist' => json_encode(['unu-002', 'unu-007']),
             'password' => Hash::make(env('SEED_STUDENT_FADHIL_PASSWORD', 'placeholder_password')),
+            'password_plain' => env('SEED_STUDENT_FADHIL_PASSWORD', 'placeholder_password'),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now()
         ]);
@@ -42,6 +43,7 @@ class DatabaseSeeder extends Seeder
                 'phone' => '087855544432',
                 'wishlist' => '[]',
                 'password' => Hash::make(env('SEED_STUDENT_AHMAD_PASSWORD', 'placeholder_password')),
+                'password_plain' => env('SEED_STUDENT_AHMAD_PASSWORD', 'placeholder_password'),
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now()
             ],
@@ -55,6 +57,7 @@ class DatabaseSeeder extends Seeder
                 'phone' => '085966677788',
                 'wishlist' => '[]',
                 'password' => Hash::make(env('SEED_STUDENT_SITI_PASSWORD', 'placeholder_password')),
+                'password_plain' => env('SEED_STUDENT_SITI_PASSWORD', 'placeholder_password'),
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now()
             ],
@@ -68,6 +71,7 @@ class DatabaseSeeder extends Seeder
                 'phone' => '082188899900',
                 'wishlist' => '[]',
                 'password' => Hash::make(env('SEED_STUDENT_BUDI_PASSWORD', 'placeholder_password')),
+                'password_plain' => env('SEED_STUDENT_BUDI_PASSWORD', 'placeholder_password'),
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now()
             ],
@@ -81,6 +85,7 @@ class DatabaseSeeder extends Seeder
                 'phone' => '081988877766',
                 'wishlist' => '[]',
                 'password' => Hash::make(env('SEED_STUDENT_DEWI_PASSWORD', 'placeholder_password')),
+                'password_plain' => env('SEED_STUDENT_DEWI_PASSWORD', 'placeholder_password'),
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now()
             ]
@@ -95,6 +100,7 @@ class DatabaseSeeder extends Seeder
             'prodi' => null,
             'phone' => '081122334455',
             'password' => Hash::make(env('SEED_ADMIN_PASSWORD', 'placeholder_password')),
+            'password_plain' => env('SEED_ADMIN_PASSWORD', 'placeholder_password'),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now()
         ]);

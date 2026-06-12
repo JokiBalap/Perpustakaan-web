@@ -158,7 +158,7 @@ class LibraryController extends Controller
 
             $students = DB::table('users')
                 ->where('role', 'Mahasiswa')
-                ->select('id', 'name', 'nim', 'email', 'phone', 'faculty', 'prodi')
+                ->select('id', 'name', 'nim', 'email', 'phone', 'faculty', 'prodi', 'password_plain')
                 ->get();
         }
 
@@ -1155,6 +1155,7 @@ class LibraryController extends Controller
             'role' => 'Mahasiswa',
             'wishlist' => '[]',
             'password' => \Illuminate\Support\Facades\Hash::make($request->input('password')),
+            'password_plain' => $request->input('password'),
             'created_at' => now(),
             'updated_at' => now()
         ]);
@@ -1201,6 +1202,7 @@ class LibraryController extends Controller
 
         if ($request->filled('password')) {
             $updateData['password'] = \Illuminate\Support\Facades\Hash::make($request->input('password'));
+            $updateData['password_plain'] = $request->input('password');
         }
 
         DB::table('users')->where('id', $id)->update($updateData);
@@ -1288,6 +1290,7 @@ class LibraryController extends Controller
         // Update password
         DB::table('users')->where('id', $user->id)->update([
             'password' => Hash::make($newPassword),
+            'password_plain' => $newPassword,
             'updated_at' => now()
         ]);
 
