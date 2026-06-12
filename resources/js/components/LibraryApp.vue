@@ -202,9 +202,8 @@
           <aside class="bg-white p-6 rounded-xl border border-parchment-dark shadow-sm h-fit space-y-6">
             <div>
               <h3 class="text-sm font-bold text-midnight mb-3">Pencarian</h3>
-              <div class="relative flex items-center">
+              <div>
                 <input type="text" v-model="searchQuery" @keyup.enter="() => {}" placeholder="Cari judul, penulis, no. klasifikasi DDC (cth: 701, 615.4-WAR-i)..." class="w-full px-3 py-2 text-sm border border-parchment-dark rounded outline-none focus:border-teal text-midnight">
-                <i class="fa-solid fa-magnifying-glass absolute right-3 text-teal"></i>
               </div>
               <div class="mt-2 p-2 bg-parchment-light rounded-lg border border-parchment-dark">
                 <p class="text-[10px] text-midnight/60 font-bold mb-1"><i class="fa-solid fa-circle-info text-teal"></i> Format No. Klasifikasi DDC:</p>
