@@ -86,8 +86,8 @@
     <div class="bg-midnight-light border-b border-black border-opacity-30 py-2">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-white text-xs">
         <div class="flex items-center gap-2">
-          <i class="fa-solid fa-calendar-day text-teal-light text-sm"></i>
-          <span>Tanggal Simulasi: <strong class="text-teal-light" id="sim-current-date-badge">{{ formattedSimDate }}</strong></span>
+          <i class="fa-solid fa-clock text-teal-light text-sm"></i>
+          <span>Waktu Realtime: <strong class="text-teal-light" id="sim-current-date-badge">{{ formattedSimDate }}</strong></span>
         </div>
         <div class="flex items-center gap-2">
           <span>Lakukan Perjalanan Waktu:</span>
@@ -1151,11 +1151,11 @@
 
     <!-- MODAL 1: BOOK DETAILS -->
     <div v-if="showDetailsModal && selectedBook" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
-      <div class="bg-white rounded-2xl max-w-2xl w-full p-6 md:p-8 relative flex flex-col md:flex-row gap-6 shadow-premium border border-parchment-dark animate-scaleUp">
+      <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-5 md:p-8 relative flex flex-col md:flex-row gap-6 shadow-premium border border-parchment-dark animate-scaleUp">
         <button @click="showDetailsModal = false" class="absolute top-4 right-4 text-midnight opacity-70 hover:opacity-100 text-xl font-bold"><i class="fa-solid fa-times"></i></button>
         
         <!-- Book Cover in Details -->
-        <div class="w-full md:w-48 aspect-[3/4] rounded-xl overflow-hidden shadow-book bg-parchment shrink-0 border-l-4 border-black/25">
+        <div class="w-32 md:w-48 aspect-[3/4] rounded-xl overflow-hidden shadow-book bg-parchment shrink-0 border-l-4 border-black/25 mx-auto md:mx-0">
           <img v-if="selectedBook.imagePath" :src="'/' + selectedBook.imagePath" class="w-full h-full object-cover">
           <div v-else :style="getBookCoverStyle(selectedBook)" class="w-full h-full p-6 flex flex-col justify-between text-white relative">
             <div class="absolute inset-0 bg-gradient-to-r from-black/25 via-transparent to-transparent pointer-events-none"></div>
@@ -1492,6 +1492,8 @@ export default {
       notifications: [],
       activityLogs: [],
       simDateStr: '',
+      currentSimTime: null,
+      simTimerInterval: null,
       allLoans: [],
       allReservations: [],
       studentsList: [],
@@ -1609,9 +1611,11 @@ export default {
       return this.notifications.filter(n => n.unread).length;
     },
     formattedSimDate() {
-      if (!this.simDateStr) return '';
-      const date = new Date(this.simDateStr);
-      return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+      if (!this.currentSimTime) return '';
+      const date = new Date(this.currentSimTime);
+      const datePart = date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+      const timePart = date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      return `${datePart}, ${timePart}`;
     },
     popularBooks() {
       return [...this.books].sort((a, b) => b.popularity - a.popularity).slice(0, 4);
@@ -1647,8 +1651,25 @@ export default {
       return result;
     }
   },
+  watch: {
+    simDateStr(newVal) {
+      if (newVal) {
+        this.currentSimTime = new Date(newVal).getTime();
+      }
+    }
+  },
   created() {
     this.fetchState();
+    this.simTimerInterval = setInterval(() => {
+      if (this.currentSimTime) {
+        this.currentSimTime += 1000;
+      }
+    }, 1000);
+  },
+  beforeUnmount() {
+    if (this.simTimerInterval) {
+      clearInterval(this.simTimerInterval);
+    }
   },
   methods: {
     showToastMsg(message, type = 'info') {
