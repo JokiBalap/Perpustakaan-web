@@ -15,7 +15,7 @@
   <meta property="og:url" content="{{ url()->current() }}">
   <meta property="og:title" content="Perpustakaan Digital UNU NTB">
   <meta property="og:description" content="Portal perpustakaan resmi Universitas Nahdlatul Ulama Nusa Tenggara Barat. Cari koleksi buku akademik, karya sastra, jurnal, dan gunakan kurator cerdas berbasis AI.">
-  <meta property="og:image" content="{{ request()->getSchemeAndHttpHost() }}/assets/hero.png">
+  <meta property="og:image" content="{{ request()->getSchemeAndHttpHost() }}/assets/hero_share.jpg">
   <meta property="og:image:alt" content="Perpustakaan UNU NTB Hero Banner">
 
   <!-- Twitter -->
@@ -23,7 +23,7 @@
   <meta property="twitter:url" content="{{ url()->current() }}">
   <meta property="twitter:title" content="Perpustakaan Digital UNU NTB">
   <meta property="twitter:description" content="Portal perpustakaan resmi Universitas Nahdlatul Ulama Nusa Tenggara Barat. Cari koleksi buku akademik, karya sastra, jurnal, dan gunakan kurator cerdas berbasis AI.">
-  <meta property="twitter:image" content="{{ request()->getSchemeAndHttpHost() }}/assets/hero.png">
+  <meta property="twitter:image" content="{{ request()->getSchemeAndHttpHost() }}/assets/hero_share.jpg">
   
   <!-- CSRF Token for Axios/Fetch -->
   <meta name="csrf-token" content="{{ csrf_token() }}">
