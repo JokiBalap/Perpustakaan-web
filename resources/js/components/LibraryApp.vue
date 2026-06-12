@@ -1205,6 +1205,14 @@
                 <span class="block text-[10px] text-midnight opacity-70">Peringkat Popularitas</span>
                 <strong class="text-sm font-black text-amber"><i class="fa-solid fa-star"></i> {{ selectedBook.popularity }} / 100</strong>
               </div>
+              <div v-if="selectedBook.classNumber">
+                <span class="block text-[10px] text-midnight opacity-70">No. Klasifikasi (DDC)</span>
+                <strong class="text-xs font-black text-midnight">{{ selectedBook.classNumber }}</strong>
+              </div>
+              <div v-if="selectedBook.isbn">
+                <span class="block text-[10px] text-midnight opacity-70">ISBN / ISSN</span>
+                <strong class="text-xs font-black text-midnight">{{ selectedBook.isbn }}</strong>
+              </div>
             </div>
           </div>
 
@@ -1383,6 +1391,17 @@
             <div class="w-24">
               <label class="block text-xs font-bold text-midnight mb-1">Stok Salinan</label>
               <input type="number" v-model="bookForm.stock" required class="w-full px-3 py-2 text-xs border border-parchment-dark rounded outline-none focus:border-teal text-midnight">
+            </div>
+          </div>
+
+          <div class="flex gap-4">
+            <div class="flex-grow">
+              <label class="block text-xs font-bold text-midnight mb-1">Nomor Klasifikasi (DDC)</label>
+              <input type="text" v-model="bookForm.class_number" placeholder="Contoh: 615.4" class="w-full px-3 py-2 text-xs border border-parchment-dark rounded outline-none focus:border-teal text-midnight">
+            </div>
+            <div class="w-36 flex-shrink-0">
+              <label class="block text-xs font-bold text-midnight mb-1">ISBN / ISSN</label>
+              <input type="text" v-model="bookForm.isbn" placeholder="Contoh: 978..." class="w-full px-3 py-2 text-xs border border-parchment-dark rounded outline-none focus:border-teal text-midnight">
             </div>
           </div>
 
@@ -1599,6 +1618,8 @@ export default {
         title: '',
         author: '',
         genre: '',
+        class_number: '',
+        isbn: '',
         published_year: 2026,
         stock: 1,
         description: '',
@@ -1678,7 +1699,9 @@ export default {
       let result = this.books.filter(book => {
         const matchesSearch = book.title.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
                              book.author.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-                             book.genre.toLowerCase().includes(this.searchQuery.toLowerCase());
+                             book.genre.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                             (book.classNumber && book.classNumber.toLowerCase().includes(this.searchQuery.toLowerCase())) ||
+                             (book.isbn && book.isbn.toLowerCase().includes(this.searchQuery.toLowerCase()));
         const matchesGenre = this.selectedGenres.length === 0 || this.selectedGenres.includes(book.genre);
         const matchesAvailable = !this.availableOnly || book.stock > 0;
         return matchesSearch && matchesGenre && matchesAvailable;
@@ -2047,6 +2070,8 @@ export default {
         title: '',
         author: '',
         genre: '',
+        class_number: '',
+        isbn: '',
         published_year: 2026,
         stock: 1,
         description: '',
@@ -2067,6 +2092,8 @@ export default {
         title: book.title,
         author: book.author,
         genre: book.genre,
+        class_number: book.classNumber || '',
+        isbn: book.isbn || '',
         published_year: book.publishedYear,
         stock: book.stock,
         description: book.description,
@@ -2089,6 +2116,8 @@ export default {
       formData.append('title', this.bookForm.title);
       formData.append('author', this.bookForm.author);
       formData.append('genre', this.bookForm.genre);
+      formData.append('class_number', this.bookForm.class_number || '');
+      formData.append('isbn', this.bookForm.isbn || '');
       formData.append('published_year', this.bookForm.published_year);
       formData.append('stock', this.bookForm.stock);
       formData.append('description', this.bookForm.description);
