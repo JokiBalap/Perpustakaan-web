@@ -34,7 +34,10 @@
           <label class="block text-sm font-bold text-midnight mb-2">Kata Sandi</label>
           <div class="relative flex items-center">
             <i class="fa-solid fa-lock absolute left-4 text-teal"></i>
-            <input type="password" name="password" required class="w-full py-3 pl-12 pr-4 border border-parchment-dark rounded-lg outline-none focus:ring-2 focus:ring-teal-light focus:border-teal transition-all bg-parchment-light text-midnight" placeholder="••••••••">
+            <input :type="showLoginPassword ? 'text' : 'password'" name="password" required class="w-full py-3 pl-12 pr-12 border border-parchment-dark rounded-lg outline-none focus:ring-2 focus:ring-teal-light focus:border-teal transition-all bg-parchment-light text-midnight" placeholder="••••••••">
+            <button type="button" @click="showLoginPassword = !showLoginPassword" class="absolute right-4 text-teal hover:text-teal-dark focus:outline-none z-10 flex items-center">
+              <i class="fa-solid" :class="showLoginPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+            </button>
           </div>
         </div>
 
@@ -114,7 +117,10 @@
           <label class="block text-sm font-bold text-midnight mb-2">Kata Sandi Baru</label>
           <div class="relative flex items-center">
             <i class="fa-solid fa-lock absolute left-4 text-teal"></i>
-            <input type="password" name="password" required minlength="6" class="w-full py-2.5 pl-12 pr-4 border border-parchment-dark rounded-lg outline-none focus:ring-2 focus:ring-teal-light focus:border-teal transition-all bg-parchment-light text-midnight" placeholder="Minimal 6 karakter">
+            <input :type="showRegisterPassword ? 'text' : 'password'" name="password" required minlength="6" class="w-full py-2.5 pl-12 pr-12 border border-parchment-dark rounded-lg outline-none focus:ring-2 focus:ring-teal-light focus:border-teal transition-all bg-parchment-light text-midnight" placeholder="Minimal 6 karakter">
+            <button type="button" @click="showRegisterPassword = !showRegisterPassword" class="absolute right-4 text-teal hover:text-teal-dark focus:outline-none z-10 flex items-center">
+              <i class="fa-solid" :class="showRegisterPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+            </button>
           </div>
         </div>
 
@@ -144,6 +150,8 @@ export default {
   data() {
     return {
       isLogin: true,
+      showLoginPassword: false,
+      showRegisterPassword: false,
       loginEmail: this.oldEmail,
       errorList: [...this.initialErrors],
       csrfToken: document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
@@ -190,6 +198,8 @@ export default {
     toggleForm() {
       this.isLogin = !this.isLogin;
       this.errorList = []; // Clear errors when switching views
+      this.showLoginPassword = false;
+      this.showRegisterPassword = false;
     }
   }
 }

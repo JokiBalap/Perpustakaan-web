@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 
 class LibraryController extends Controller
@@ -547,13 +548,62 @@ class LibraryController extends Controller
             return response()->json(['message' => 'Buku tidak ditemukan.'], 404);
         }
 
+        // Increment total stock anyway because a new physical copy was added
         DB::table('books')->where('id', $bookId)->update([
-            'stock' => $book->stock + 1,
             'total_stock' => $book->total_stock + 1,
             'updated_at' => now()
         ]);
 
         $simDate = $this->CarbonSimDate();
+
+        // Queue logic: Check if another student has reserved this book
+        $nextReservation = DB::table('reservations')
+            ->where('book_id', $bookId)
+            ->orderBy('queue_position', 'asc')
+            ->first();
+
+        if ($nextReservation) {
+            // Allocate the book to this user (don't increment available stock, since it gets checked out immediately)
+            DB::table('reservations')->where('id', $nextReservation->id)->delete();
+            DB::table('reservations')->where('book_id', $bookId)->decrement('queue_position');
+
+            $nextUser = DB::table('users')->where('id', $nextReservation->user_id)->first();
+            $dueDate = (clone $simDate)->addDays(14);
+
+            DB::table('loans')->insert([
+                'book_id' => $bookId,
+                'user_id' => $nextUser->id,
+                'borrow_date' => $simDate,
+                'due_date' => $dueDate,
+                'status' => 'active',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+
+            DB::table('circulation_logs')->insert([
+                'activity' => 'Pemberian Antrean',
+                'detail' => "Buku '{$book->title}' dialokasikan dari daftar reservasi ke Mahasiswa {$nextUser->name}.",
+                'timestamp' => $simDate,
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+
+            DB::table('notifications')->insert([
+                'user_id' => $nextUser->id,
+                'title' => 'Reservasi Siap & Dipinjam',
+                'message' => "Buku '{$book->title}' yang Anda antre sekarang tersedia dan otomatis dipinjamkan ke akun Anda. Jatuh tempo: {$dueDate->locale('id')->isoFormat('D MMM YYYY')}.",
+                'type' => 'hold',
+                'is_read' => false,
+                'created_at' => $simDate,
+                'updated_at' => $simDate
+            ]);
+
+            $msg = "Stok buku berhasil ditambah dan langsung dialokasikan ke antrean teratas.";
+        } else {
+            // No reservation, increment available stock
+            DB::table('books')->where('id', $bookId)->increment('stock');
+            $msg = "Stok buku berhasil ditambah.";
+        }
 
         DB::table('circulation_logs')->insert([
             'activity' => 'Penambahan Stok',
@@ -563,7 +613,7 @@ class LibraryController extends Controller
             'updated_at' => now()
         ]);
 
-        return response()->json(['message' => 'Stok buku berhasil ditambah.']);
+        return response()->json(['message' => $msg]);
     }
 
     public function destroyBook($bookId)
@@ -1190,5 +1240,51 @@ class LibraryController extends Controller
         ]);
 
         return response()->json(['message' => 'Akun mahasiswa berhasil dihapus.']);
+    }
+
+    public function changePassword(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized.'], 401);
+        }
+
+        $request->validate([
+            'currentPassword' => 'required',
+            'newPassword' => 'required|min:6',
+            'confirmPassword' => 'required|same:newPassword'
+        ], [
+            'currentPassword.required' => 'Kata sandi saat ini harus diisi.',
+            'newPassword.required' => 'Kata sandi baru harus diisi.',
+            'newPassword.min' => 'Kata sandi baru minimal 6 karakter.',
+            'confirmPassword.required' => 'Konfirmasi kata sandi harus diisi.',
+            'confirmPassword.same' => 'Konfirmasi kata sandi tidak cocok dengan kata sandi baru.'
+        ]);
+
+        $currentPassword = $request->input('currentPassword');
+        $newPassword = $request->input('newPassword');
+
+        // Check if current password is correct
+        if (!Hash::check($currentPassword, $user->password)) {
+            return response()->json(['message' => 'Kata sandi saat ini salah.'], 400);
+        }
+
+        // Update password
+        DB::table('users')->where('id', $user->id)->update([
+            'password' => Hash::make($newPassword),
+            'updated_at' => now()
+        ]);
+
+        $simDate = $this->CarbonSimDate();
+
+        DB::table('circulation_logs')->insert([
+            'activity' => 'Ubah Kata Sandi',
+            'detail' => "Pengguna {$user->name} ({$user->role}) mengubah kata sandi miliknya.",
+            'timestamp' => $simDate,
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
+
+        return response()->json(['message' => 'Kata sandi berhasil diperbarui.']);
     }
 }

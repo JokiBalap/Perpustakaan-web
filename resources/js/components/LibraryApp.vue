@@ -98,32 +98,32 @@
     </div>
 
     <!-- MAIN VIEWPORT -->
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
       
       <!-- 1. HOME SECTION -->
       <section v-if="activeTab === 'home'" class="space-y-8 animate-fadeIn">
-        <div class="relative bg-gradient-to-r from-midnight to-midnight-light rounded-2xl p-8 md:p-12 text-white overflow-hidden shadow-lg border border-teal border-opacity-20">
+        <div class="relative bg-gradient-to-r from-midnight to-midnight-light rounded-2xl p-6 sm:p-8 md:p-12 text-white overflow-hidden shadow-lg border border-teal border-opacity-20">
           <div class="absolute -right-16 -bottom-16 w-64 h-64 bg-teal rounded-full opacity-10 blur-xl"></div>
           <div class="relative max-w-2xl">
-            <h2 class="text-2xl md:text-4xl font-extrabold leading-tight text-parchment">Temukan Inspirasi & Pengetahuan di Perpustakaan UNU NTB</h2>
-            <p class="mt-4 text-sm md:text-base text-parchment text-opacity-80">Akses katalog literatur ilmiah, khazanah budaya, dan teknologi masa kini. Dilengkapi dengan asisten rekomendasi AI pribadi Anda.</p>
-            <div class="mt-8 flex gap-2 max-w-md bg-white rounded-lg p-1 shadow-md">
-              <input type="text" v-model="heroSearchText" placeholder="Cari judul, penulis, atau genre..." class="flex-grow px-4 py-2 text-midnight text-sm outline-none rounded-lg">
-              <button @click="handleHeroSearch" class="bg-teal hover:bg-teal-dark text-white px-6 py-2 rounded-md font-bold transition-colors flex items-center gap-2">
-                <i class="fa-solid fa-magnifying-glass"></i> Cari
+            <h2 class="text-xl sm:text-2xl md:text-4xl font-extrabold leading-tight text-parchment">Temukan Inspirasi & Pengetahuan di Perpustakaan UNU NTB</h2>
+            <p class="mt-3 text-xs sm:text-sm md:text-base text-parchment text-opacity-80">Akses katalog literatur ilmiah, khazanah budaya, dan teknologi masa kini. Dilengkapi dengan asisten rekomendasi AI pribadi Anda.</p>
+            <div class="mt-6 sm:mt-8 flex gap-2 max-w-md bg-white rounded-lg p-1 shadow-md">
+              <input type="text" v-model="heroSearchText" placeholder="Cari judul, penulis, atau genre..." class="flex-grow px-3 sm:px-4 py-1.5 sm:py-2 text-midnight text-xs sm:text-sm outline-none rounded-lg">
+              <button @click="handleHeroSearch" class="bg-teal hover:bg-teal-dark text-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-md font-bold transition-colors flex items-center gap-2 text-xs sm:text-sm">
+                <i class="fa-solid fa-magnifying-glass"></i> <span class="hidden sm:inline">Cari</span>
               </button>
             </div>
           </div>
         </div>
 
         <div>
-          <div class="flex justify-between items-end border-b border-parchment-dark pb-3 mb-6">
-            <h3 class="text-lg font-bold text-midnight flex items-center gap-2"><i class="fa-solid fa-fire text-amber"></i> Buku Terpopuler</h3>
-            <button @click="setViewTab('browse')" class="text-sm font-semibold text-teal hover:underline">Lihat Semua Katalog</button>
+          <div class="flex justify-between items-end border-b border-parchment-dark pb-2 sm:pb-3 mb-4 sm:mb-6">
+            <h3 class="text-sm sm:text-base md:text-lg font-bold text-midnight flex items-center gap-2"><i class="fa-solid fa-fire text-amber"></i> Buku Terpopuler</h3>
+            <button @click="setViewTab('browse')" class="text-xs sm:text-sm font-semibold text-teal hover:underline">Lihat Semua Katalog</button>
           </div>
-          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-            <div v-for="book in popularBooks" :key="book.id" @click="openBookDetails(book.id)" class="bg-white rounded-xl shadow hover:shadow-lg hover:-translate-y-1 transform transition-all duration-300 p-3 cursor-pointer group">
-              <div class="aspect-[3/4] rounded-lg overflow-hidden shadow-book relative bg-parchment border-l-4 border-black border-opacity-20 mb-3">
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+            <div v-for="book in popularBooks" :key="book.id" @click="openBookDetails(book.id)" class="bg-white rounded-lg sm:rounded-xl shadow hover:shadow-lg hover:-translate-y-1 transform transition-all duration-300 p-2 sm:p-3 cursor-pointer group">
+              <div class="aspect-[3/4] rounded-lg overflow-hidden shadow-book relative bg-parchment border-l-4 border-black border-opacity-20 mb-2 sm:mb-3">
                 <img v-if="book.imagePath" :src="'/' + book.imagePath" class="w-full h-full object-cover">
                 <div v-else :style="getBookCoverStyle(book)" class="w-full h-full p-4 flex flex-col justify-between text-white relative">
                   <div class="absolute inset-0 bg-gradient-to-r from-black/25 via-transparent to-transparent pointer-events-none"></div>
@@ -139,10 +139,10 @@
                 </div>
               </div>
               <div>
-                <h4 class="font-bold text-sm text-midnight line-clamp-1 group-hover:text-teal transition-colors">{{ book.title }}</h4>
-                <p class="text-xs text-midnight opacity-75 line-clamp-1 mt-0.5">{{ book.author }}</p>
-                <div class="flex items-center justify-between mt-3 pt-2 border-t border-parchment-dark">
-                  <span :class="['px-2 py-0.5 text-[10px] font-bold rounded-full', book.stock > 0 ? 'bg-teal/10 text-teal' : 'bg-danger/10 text-danger']">
+                <h4 class="font-bold text-xs sm:text-sm text-midnight line-clamp-1 group-hover:text-teal transition-colors">{{ book.title }}</h4>
+                <p class="text-[10px] sm:text-xs text-midnight opacity-75 line-clamp-1 mt-0.5">{{ book.author }}</p>
+                <div class="flex items-center justify-between mt-2 sm:mt-3 pt-1.5 sm:pt-2 border-t border-parchment-dark">
+                  <span :class="['px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-bold rounded-full', book.stock > 0 ? 'bg-teal/10 text-teal' : 'bg-danger/10 text-danger']">
                     {{ book.stock > 0 ? 'Tersedia' : 'Dipesan' }}
                   </span>
                   <span class="text-xs font-bold text-amber flex items-center gap-1"><i class="fa-solid fa-star"></i> {{ book.popularity }}</span>
@@ -153,13 +153,13 @@
         </div>
 
         <div>
-          <div class="flex justify-between items-end border-b border-parchment-dark pb-3 mb-6">
-            <h3 class="text-lg font-bold text-midnight flex items-center gap-2"><i class="fa-solid fa-clock text-teal"></i> Koleksi Terbaru</h3>
-            <button @click="setViewTab('browse')" class="text-sm font-semibold text-teal hover:underline">Lihat Semua Katalog</button>
+          <div class="flex justify-between items-end border-b border-parchment-dark pb-2 sm:pb-3 mb-4 sm:mb-6">
+            <h3 class="text-sm sm:text-base md:text-lg font-bold text-midnight flex items-center gap-2"><i class="fa-solid fa-clock text-teal"></i> Koleksi Terbaru</h3>
+            <button @click="setViewTab('browse')" class="text-xs sm:text-sm font-semibold text-teal hover:underline">Lihat Semua Katalog</button>
           </div>
-          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-            <div v-for="book in recentBooks" :key="book.id" @click="openBookDetails(book.id)" class="bg-white rounded-xl shadow hover:shadow-lg hover:-translate-y-1 transform transition-all duration-300 p-3 cursor-pointer group">
-              <div class="aspect-[3/4] rounded-lg overflow-hidden shadow-book relative bg-parchment border-l-4 border-black border-opacity-20 mb-3">
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+            <div v-for="book in recentBooks" :key="book.id" @click="openBookDetails(book.id)" class="bg-white rounded-lg sm:rounded-xl shadow hover:shadow-lg hover:-translate-y-1 transform transition-all duration-300 p-2 sm:p-3 cursor-pointer group">
+              <div class="aspect-[3/4] rounded-lg overflow-hidden shadow-book relative bg-parchment border-l-4 border-black border-opacity-20 mb-2 sm:mb-3">
                 <img v-if="book.imagePath" :src="'/' + book.imagePath" class="w-full h-full object-cover">
                 <div v-else :style="getBookCoverStyle(book)" class="w-full h-full p-4 flex flex-col justify-between text-white relative">
                   <div class="absolute inset-0 bg-gradient-to-r from-black/25 via-transparent to-transparent pointer-events-none"></div>
@@ -175,10 +175,10 @@
                 </div>
               </div>
               <div>
-                <h4 class="font-bold text-sm text-midnight line-clamp-1 group-hover:text-teal transition-colors">{{ book.title }}</h4>
-                <p class="text-xs text-midnight opacity-75 line-clamp-1 mt-0.5">{{ book.author }}</p>
-                <div class="flex items-center justify-between mt-3 pt-2 border-t border-parchment-dark">
-                  <span :class="['px-2 py-0.5 text-[10px] font-bold rounded-full', book.stock > 0 ? 'bg-teal/10 text-teal' : 'bg-danger/10 text-danger']">
+                <h4 class="font-bold text-xs sm:text-sm text-midnight line-clamp-1 group-hover:text-teal transition-colors">{{ book.title }}</h4>
+                <p class="text-[10px] sm:text-xs text-midnight opacity-75 line-clamp-1 mt-0.5">{{ book.author }}</p>
+                <div class="flex items-center justify-between mt-2 sm:mt-3 pt-1.5 sm:pt-2 border-t border-parchment-dark">
+                  <span :class="['px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-bold rounded-full', book.stock > 0 ? 'bg-teal/10 text-teal' : 'bg-danger/10 text-danger']">
                     {{ book.stock > 0 ? 'Tersedia' : 'Dipesan' }}
                   </span>
                   <span class="text-xs font-bold text-amber flex items-center gap-1"><i class="fa-solid fa-star"></i> {{ book.popularity }}</span>
@@ -392,6 +392,11 @@
               <h3 class="font-extrabold text-midnight text-base leading-snug">{{ currentUser.name }}</h3>
               <p class="text-xs text-midnight opacity-75 mt-0.5">{{ currentUser.nim ? 'NIM: ' + currentUser.nim : 'NIDN/NIK Pustakawan' }}</p>
               <p class="text-xs text-teal font-bold uppercase mt-2 tracking-wider">{{ currentUser.prodi || 'Departemen Perpustakaan' }}</p>
+            </div>
+            <div class="pt-2 border-t border-parchment-dark">
+              <button @click="openChangePasswordModal" class="w-full py-2 bg-midnight hover:bg-black text-white rounded font-bold text-xs shadow transition-colors flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-key"></i> Ubah Kata Sandi
+              </button>
             </div>
           </div>
 
@@ -1255,7 +1260,12 @@
             <label class="block text-xs font-bold text-midnight mb-1">
               {{ editingId ? 'Kata Sandi Baru (Kosongkan jika tidak diubah)' : 'Kata Sandi Baru' }}
             </label>
-            <input type="password" v-model="studentForm.password" :required="!editingId" :minlength="!editingId || studentForm.password ? 6 : null" placeholder="Minimal 6 karakter" class="w-full px-3 py-2 text-xs border border-parchment-dark rounded outline-none focus:border-teal text-midnight">
+            <div class="relative flex items-center">
+              <input :type="showAdminStudentPassword ? 'text' : 'password'" v-model="studentForm.password" :required="!editingId" :minlength="!editingId || studentForm.password ? 6 : null" placeholder="Minimal 6 karakter" class="w-full pl-3 pr-10 py-2 text-xs border border-parchment-dark rounded outline-none focus:border-teal text-midnight">
+              <button type="button" @click="showAdminStudentPassword = !showAdminStudentPassword" class="absolute right-3 text-teal hover:text-teal-dark focus:outline-none z-10 flex items-center">
+                <i class="fa-solid" :class="showAdminStudentPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+              </button>
+            </div>
           </div>
 
           <div class="pt-4 flex justify-end gap-3">
@@ -1396,6 +1406,53 @@
       </div>
     </div>
 
+    <!-- MODAL 5: CHANGE PASSWORD -->
+    <div v-if="showChangePasswordModal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl max-w-md w-full p-6 md:p-8 relative shadow-premium border border-parchment-dark animate-scaleUp">
+        <button @click="showChangePasswordModal = false" class="absolute top-4 right-4 text-midnight opacity-70 hover:opacity-100 text-xl font-bold"><i class="fa-solid fa-times"></i></button>
+        <h3 class="text-lg font-bold text-midnight mb-6 border-b pb-2">
+          Ubah Kata Sandi Akun
+        </h3>
+        
+        <form @submit.prevent="submitChangePassword" class="space-y-4 text-left">
+          <div>
+            <label class="block text-xs font-bold text-midnight mb-1">Kata Sandi Saat Ini</label>
+            <div class="relative flex items-center">
+              <input :type="showCurrentPwd ? 'text' : 'password'" v-model="changePasswordForm.currentPassword" required class="w-full pl-3 pr-10 py-2 text-xs border border-parchment-dark rounded outline-none focus:border-teal text-midnight">
+              <button type="button" @click="showCurrentPwd = !showCurrentPwd" class="absolute right-3 text-teal hover:text-teal-dark focus:outline-none z-10 flex items-center">
+                <i class="fa-solid" :class="showCurrentPwd ? 'fa-eye-slash' : 'fa-eye'"></i>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-midnight mb-1">Kata Sandi Baru</label>
+            <div class="relative flex items-center">
+              <input :type="showNewPwd ? 'text' : 'password'" v-model="changePasswordForm.newPassword" required minlength="6" class="w-full pl-3 pr-10 py-2 text-xs border border-parchment-dark rounded outline-none focus:border-teal text-midnight" placeholder="Minimal 6 karakter">
+              <button type="button" @click="showNewPwd = !showNewPwd" class="absolute right-3 text-teal hover:text-teal-dark focus:outline-none z-10 flex items-center">
+                <i class="fa-solid" :class="showNewPwd ? 'fa-eye-slash' : 'fa-eye'"></i>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-midnight mb-1">Konfirmasi Kata Sandi Baru</label>
+            <div class="relative flex items-center">
+              <input :type="showConfirmPwd ? 'text' : 'password'" v-model="changePasswordForm.confirmPassword" required minlength="6" class="w-full pl-3 pr-10 py-2 text-xs border border-parchment-dark rounded outline-none focus:border-teal text-midnight" placeholder="Ulangi kata sandi baru">
+              <button type="button" @click="showConfirmPwd = !showConfirmPwd" class="absolute right-3 text-teal hover:text-teal-dark focus:outline-none z-10 flex items-center">
+                <i class="fa-solid" :class="showConfirmPwd ? 'fa-eye-slash' : 'fa-eye'"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="pt-4 flex justify-end gap-3">
+            <button type="button" @click="showChangePasswordModal = false" class="px-4 py-2 border border-parchment-dark text-midnight rounded font-bold text-xs hover:bg-parchment-light transition-colors">Batal</button>
+            <button type="submit" class="px-5 py-2 bg-teal hover:bg-teal-dark text-white rounded font-bold text-xs shadow transition-colors">Perbarui Kata Sandi</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -1459,9 +1516,20 @@ export default {
       selectedBook: null,
 
       showStudentModal: false,
+      showAdminStudentPassword: false,
       showLoanModal: false,
       showBookModal: false,
+      showChangePasswordModal: false,
+      showCurrentPwd: false,
+      showNewPwd: false,
+      showConfirmPwd: false,
       editingId: null,
+
+      changePasswordForm: {
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      },
 
       // Form Models
       studentForm: {
@@ -1997,6 +2065,7 @@ export default {
     // Librarian Student CRUD
     openAddStudentModal() {
       this.editingId = null;
+      this.showAdminStudentPassword = false;
       this.studentForm = {
         name: '',
         nim: '',
@@ -2010,6 +2079,7 @@ export default {
     },
     openEditStudentModal(student) {
       this.editingId = student.id;
+      this.showAdminStudentPassword = false;
       this.studentForm = {
         name: student.name,
         nim: student.nim,
@@ -2128,6 +2198,26 @@ export default {
       form.appendChild(csrfInput);
       document.body.appendChild(form);
       form.submit();
+    },
+    openChangePasswordModal() {
+      this.changePasswordForm = {
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      };
+      this.showCurrentPwd = false;
+      this.showNewPwd = false;
+      this.showConfirmPwd = false;
+      this.showChangePasswordModal = true;
+    },
+    async submitChangePassword() {
+      try {
+        const res = await axios.post('/api/profile/change-password', this.changePasswordForm);
+        this.showToastMsg(res.data.message, 'success');
+        this.showChangePasswordModal = false;
+      } catch (err) {
+        this.showToastMsg(err.response?.data?.message || 'Gagal mengubah kata sandi.', 'danger');
+      }
     }
   }
 }

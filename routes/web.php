@@ -61,4 +61,5 @@ Route::group(['prefix' => 'api', 'middleware' => 'auth'], function () {
     Route::post('/notifications/{id}/read', [LibraryController::class, 'markNotificationRead']);
     Route::post('/simulation/time', [LibraryController::class, 'simulateTime']);
     Route::post('/wishlist/{id}/toggle', [LibraryController::class, 'toggleWishlist']);
+    Route::post('/profile/change-password', [LibraryController::class, 'changePassword']);
 });
