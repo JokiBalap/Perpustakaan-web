@@ -400,9 +400,12 @@
               <p class="text-xs text-midnight opacity-75 mt-0.5">{{ currentUser.nim ? 'NIM: ' + currentUser.nim : 'NIDN/NIK Pustakawan' }}</p>
               <p class="text-xs text-teal font-bold uppercase mt-2 tracking-wider">{{ currentUser.prodi || 'Departemen Perpustakaan' }}</p>
             </div>
-            <div class="pt-2 border-t border-parchment-dark">
+            <div class="pt-2 border-t border-parchment-dark space-y-2">
               <button @click="openChangePasswordModal" class="w-full py-2 bg-midnight hover:bg-black text-white rounded font-bold text-xs shadow transition-colors flex items-center justify-center gap-1.5">
                 <i class="fa-solid fa-key"></i> Ubah Kata Sandi
+              </button>
+              <button @click="logout" class="w-full py-2 bg-danger hover:bg-danger-dark text-white rounded font-bold text-xs shadow transition-colors flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-right-from-bracket"></i> Keluar / Logout
               </button>
             </div>
           </div>
