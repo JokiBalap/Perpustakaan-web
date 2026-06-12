@@ -17,7 +17,7 @@
     </div>
 
     <!-- HEADER / NAVIGATION -->
-    <header :class="['bg-midnight text-white sticky top-0 z-40 shadow-md', activeTab === 'home' ? 'hidden md:block' : '']">
+    <header class="bg-midnight text-white sticky top-0 z-40 shadow-md">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center py-4 gap-4">
         <!-- Brand -->
         <div class="flex items-center gap-4 cursor-pointer" @click="setViewTab('home')">
@@ -83,7 +83,7 @@
     </header>
 
     <!-- DATE SIMULATION BAR -->
-    <div :class="['bg-gradient-to-r from-midnight-light via-midnight to-midnight-light border-b border-teal/15 py-1.5 px-3 shadow-inner', activeTab === 'home' ? 'hidden md:block' : '']">
+    <div class="bg-gradient-to-r from-midnight-light via-midnight to-midnight-light border-b border-teal/15 py-1.5 px-3 shadow-inner">
       <div class="max-w-7xl mx-auto flex items-center justify-between gap-2 text-white text-[11px] md:text-xs">
         <!-- Clock widget with dynamic pulsing/spinning effect -->
         <div class="flex items-center gap-1.5 bg-white bg-opacity-5 px-3 py-1 rounded-full border border-white/10 hover:border-teal/30 transition-all duration-300">
@@ -103,7 +103,7 @@
     </div>
 
     <!-- MAIN VIEWPORT -->
-    <main class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 pb-20 md:pb-8">
+    <main class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
       
       <!-- 1. HOME SECTION -->
       <section v-if="activeTab === 'home'" class="space-y-8 animate-fadeIn">
@@ -1468,33 +1468,6 @@
           </div>
         </form>
       </div>
-    </div>
-
-    <!-- Sleek Bottom Navigation Bar for Mobile -->
-    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-midnight/95 backdrop-blur-md border-t border-white/10 z-50 px-4 py-2.5 flex justify-around items-center text-white shadow-lg">
-      <button @click="setViewTab('home')" :class="['flex flex-col items-center gap-1 focus:outline-none transition-colors', activeTab === 'home' ? 'text-teal-light' : 'text-parchment/65']">
-        <i class="fa-solid fa-house text-base"></i>
-        <span class="text-[9px] font-bold">Beranda</span>
-      </button>
-      <button @click="setViewTab('browse')" :class="['flex flex-col items-center gap-1 focus:outline-none transition-colors', activeTab === 'browse' ? 'text-teal-light' : 'text-parchment/65']">
-        <i class="fa-solid fa-magnifying-glass text-base"></i>
-        <span class="text-[9px] font-bold">Cari Buku</span>
-      </button>
-      <button @click="setViewTab('curator')" :class="['flex flex-col items-center gap-1 focus:outline-none transition-colors', activeTab === 'curator' ? 'text-teal-light' : 'text-parchment/65']">
-        <i class="fa-solid fa-wand-magic-sparkles text-base"></i>
-        <span class="text-[9px] font-bold">AI Curator</span>
-      </button>
-      <button @click="setViewTab('dashboard')" :class="['flex flex-col items-center gap-1 focus:outline-none transition-colors', activeTab === 'dashboard' ? 'text-teal-light' : 'text-parchment/65']">
-        <i class="fa-solid fa-user-circle text-base"></i>
-        <span class="text-[9px] font-bold">Dashboard</span>
-      </button>
-      <button @click="setViewTab('notifications')" :class="['flex flex-col items-center gap-1 focus:outline-none transition-colors relative', activeTab === 'notifications' ? 'text-teal-light' : 'text-parchment/65']">
-        <i class="fa-solid fa-bell text-base"></i>
-        <span v-if="unreadNotifsCount > 0" class="absolute -top-1.5 right-1.5 bg-danger text-white text-[8px] w-4.5 h-4.5 flex items-center justify-center rounded-full font-bold border border-midnight">
-          {{ unreadNotifsCount }}
-        </span>
-        <span class="text-[9px] font-bold">Notifikasi</span>
-      </button>
     </div>
 
   </div>
