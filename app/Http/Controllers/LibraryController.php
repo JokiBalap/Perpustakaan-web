@@ -81,13 +81,22 @@ class LibraryController extends Controller
         // Fetch notifications
         $notifications = [];
         if ($user) {
-            $notifications = DB::table('notifications')
-                ->where('user_id', $user->id)
-                ->orderBy('created_at', 'desc')
-                ->get()->map(function ($n) {
+            $query = DB::table('notifications');
+            if ($user->role !== 'Pustakawan') {
+                $query->where('notifications.user_id', $user->id);
+            }
+            $notifications = $query
+                ->leftJoin('users', 'notifications.user_id', '=', 'users.id')
+                ->select('notifications.*', 'users.name as userName')
+                ->orderBy('notifications.created_at', 'desc')
+                ->get()->map(function ($n) use ($user) {
+                    $title = $n->title;
+                    if ($user->role === 'Pustakawan' && $n->userName) {
+                        $title = $n->title . " (" . $n->userName . ")";
+                    }
                     return [
                         'id' => $n->id,
-                        'title' => $n->title,
+                        'title' => $title,
                         'message' => $n->message,
                         'type' => $n->type,
                         'unread' => !$n->is_read,
@@ -655,10 +664,17 @@ class LibraryController extends Controller
 
     public function markNotificationRead($id)
     {
-        DB::table('notifications')
-            ->where('id', $id)
-            ->where('user_id', Auth::id())
-            ->update(['is_read' => true, 'updated_at' => now()]);
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized.'], 401);
+        }
+
+        $query = DB::table('notifications')->where('id', $id);
+        if ($user->role !== 'Pustakawan') {
+            $query->where('user_id', $user->id);
+        }
+
+        $query->update(['is_read' => true, 'updated_at' => now()]);
 
         return response()->json(['message' => 'Notifikasi ditandai telah dibaca.']);
     }
