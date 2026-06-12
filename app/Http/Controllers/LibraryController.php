@@ -469,6 +469,7 @@ class LibraryController extends Controller
         }
 
         $request->validate([
+            'id' => 'nullable|string',
             'title' => 'required|string',
             'author' => 'required|string',
             'genre' => 'required|string',
@@ -479,9 +480,25 @@ class LibraryController extends Controller
             'description' => 'required|string'
         ]);
 
-        // Generate unique id
-        $randomNum = rand(100, 999);
-        $bookId = 'unu-' . $randomNum;
+        $bookId = $request->input('id');
+        if (empty($bookId)) {
+            $class = trim($request->input('class_number') ?: '000');
+            if (empty($class) || $class === '-') {
+                $class = '000';
+            }
+            $count = DB::table('books')->where('id', 'like', $class . '-%')->count();
+            $bookId = $class . '-' . ($count + 1);
+            
+            while (DB::table('books')->where('id', $bookId)->exists()) {
+                $count++;
+                $bookId = $class . '-' . ($count + 1);
+            }
+        } else {
+            $bookId = trim($bookId);
+            if (DB::table('books')->where('id', $bookId)->exists()) {
+                return response()->json(['message' => "ID Buku '{$bookId}' sudah digunakan oleh buku lain."], 422);
+            }
+        }
 
         $imagePath = null;
         if ($request->hasFile('cover_image')) {
@@ -1069,6 +1086,7 @@ class LibraryController extends Controller
         }
 
         $request->validate([
+            'id' => 'required|string',
             'title' => 'required|string',
             'author' => 'required|string',
             'genre' => 'required|string',
@@ -1082,6 +1100,18 @@ class LibraryController extends Controller
         $book = DB::table('books')->where('id', $id)->first();
         if (!$book) {
             return response()->json(['message' => 'Buku tidak ditemukan.'], 404);
+        }
+
+        $newId = trim($request->input('id'));
+        if (empty($newId)) {
+            return response()->json(['message' => 'ID Buku tidak boleh kosong.'], 422);
+        }
+
+        if ($newId !== $id) {
+            $exists = DB::table('books')->where('id', $newId)->exists();
+            if ($exists) {
+                return response()->json(['message' => "ID Buku '{$newId}' sudah digunakan oleh buku lain."], 422);
+            }
         }
 
         $imagePath = $book->image_path;
@@ -1110,20 +1140,51 @@ class LibraryController extends Controller
             $newTotalStock = 0;
         }
 
-        DB::table('books')->where('id', $id)->update([
-            'title' => $request->input('title'),
-            'author' => $request->input('author'),
-            'genre' => $request->input('genre'),
-            'class_number' => $request->input('class_number'),
-            'isbn' => $request->input('isbn'),
-            'published_year' => $request->input('published_year'),
-            'stock' => $request->input('stock'),
-            'total_stock' => $newTotalStock,
-            'description' => $request->input('description'),
-            'cover_style' => json_encode($coverStyle),
-            'image_path' => $imagePath,
-            'updated_at' => now()
-        ]);
+        // Disable foreign keys temporarily for SQLite
+        DB::statement('PRAGMA foreign_keys = OFF;');
+
+        DB::transaction(function () use ($id, $newId, $request, $newTotalStock, $imagePath, $coverStyle) {
+            if ($newId !== $id) {
+                // 1. Update loans
+                DB::table('loans')->where('book_id', $id)->update(['book_id' => $newId]);
+                
+                // 2. Update reservations
+                DB::table('reservations')->where('book_id', $id)->update(['book_id' => $newId]);
+                
+                // 3. Update wishlists in users table
+                $users = DB::table('users')->where('wishlist', 'like', '%' . $id . '%')->get();
+                foreach ($users as $user) {
+                    $wishlist = json_decode($user->wishlist, true);
+                    if (is_array($wishlist)) {
+                        $key = array_search($id, $wishlist);
+                        if ($key !== false) {
+                            $wishlist[$key] = $newId;
+                            DB::table('users')->where('id', $user->id)->update(['wishlist' => json_encode(array_values($wishlist))]);
+                        }
+                    }
+                }
+            }
+            
+            // 4. Update the book details and ID
+            DB::table('books')->where('id', $id)->update([
+                'id' => $newId,
+                'title' => $request->input('title'),
+                'author' => $request->input('author'),
+                'genre' => $request->input('genre'),
+                'class_number' => $request->input('class_number'),
+                'isbn' => $request->input('isbn'),
+                'published_year' => $request->input('published_year'),
+                'stock' => $request->input('stock'),
+                'total_stock' => $newTotalStock,
+                'description' => $request->input('description'),
+                'cover_style' => json_encode($coverStyle),
+                'image_path' => $imagePath,
+                'updated_at' => now()
+            ]);
+        });
+
+        // Re-enable foreign keys
+        DB::statement('PRAGMA foreign_keys = ON;');
 
         $simDate = $this->CarbonSimDate();
 

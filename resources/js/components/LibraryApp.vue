@@ -1368,6 +1368,11 @@
         
         <form @submit.prevent="saveBook" class="space-y-4 text-left">
           <div>
+            <label class="block text-xs font-bold text-midnight mb-1">ID Buku (DDC / Kustom)</label>
+            <input type="text" v-model="bookForm.id" :placeholder="editingId ? 'Masukkan ID...' : 'Kosongkan untuk otomatisasi DDC'" class="w-full px-3 py-2 text-xs border border-parchment-dark rounded outline-none focus:border-teal text-midnight">
+          </div>
+
+          <div>
             <label class="block text-xs font-bold text-midnight mb-1">Judul Buku</label>
             <input type="text" v-model="bookForm.title" required class="w-full px-3 py-2 text-xs border border-parchment-dark rounded outline-none focus:border-teal text-midnight">
           </div>
@@ -1615,6 +1620,7 @@ export default {
         status: 'active'
       },
       bookForm: {
+        id: '',
         title: '',
         author: '',
         genre: '',
@@ -2067,6 +2073,7 @@ export default {
     openAddBookModal() {
       this.editingId = null;
       this.bookForm = {
+        id: '',
         title: '',
         author: '',
         genre: '',
@@ -2089,6 +2096,7 @@ export default {
     openEditBookModal(book) {
       this.editingId = book.id;
       this.bookForm = {
+        id: book.id,
         title: book.title,
         author: book.author,
         genre: book.genre,
@@ -2113,6 +2121,7 @@ export default {
     },
     async saveBook() {
       const formData = new FormData();
+      formData.append('id', this.bookForm.id || '');
       formData.append('title', this.bookForm.title);
       formData.append('author', this.bookForm.author);
       formData.append('genre', this.bookForm.genre);
