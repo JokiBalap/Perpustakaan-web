@@ -113,7 +113,7 @@
             <h2 class="text-xl sm:text-2xl md:text-4xl font-extrabold leading-tight text-parchment">Temukan Inspirasi & Pengetahuan di Perpustakaan UNU NTB</h2>
             <p class="mt-3 text-xs sm:text-sm md:text-base text-parchment text-opacity-80">Akses katalog literatur ilmiah, khazanah budaya, dan teknologi masa kini. Dilengkapi dengan asisten rekomendasi AI pribadi Anda.</p>
             <div class="mt-6 sm:mt-8 flex gap-2 max-w-md bg-white rounded-lg p-1 shadow-md">
-              <input type="text" v-model="heroSearchText" placeholder="Cari judul, penulis, genre, nomor klasifikasi, atau ISBN..." class="flex-grow px-3 sm:px-4 py-1.5 sm:py-2 text-midnight text-xs sm:text-sm outline-none rounded-lg">
+              <input type="text" v-model="heroSearchText" @keyup.enter="handleHeroSearch" placeholder="Cari judul, penulis, no. klasifikasi (DDC), atau ISBN..." class="flex-grow px-3 sm:px-4 py-1.5 sm:py-2 text-midnight text-xs sm:text-sm outline-none rounded-lg">
               <button @click="handleHeroSearch" class="bg-teal hover:bg-teal-dark text-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-md font-bold transition-colors flex items-center gap-2 text-xs sm:text-sm">
                 <i class="fa-solid fa-magnifying-glass"></i> <span class="hidden sm:inline">Cari</span>
               </button>
@@ -203,9 +203,10 @@
             <div>
               <h3 class="text-sm font-bold text-midnight mb-3">Pencarian</h3>
               <div class="relative flex items-center">
-                <input type="text" v-model="searchQuery" placeholder="Masukkan judul, penulis, nomor klasifikasi, atau ISBN..." class="w-full px-3 py-2 text-sm border border-parchment-dark rounded outline-none focus:border-teal text-midnight">
+                <input type="text" v-model="searchQuery" @keyup.enter="() => {}" placeholder="Ketik judul, penulis, no. klasifikasi (DDC), atau ISBN..." class="w-full px-3 py-2 text-sm border border-parchment-dark rounded outline-none focus:border-teal text-midnight">
                 <i class="fa-solid fa-magnifying-glass absolute right-3 text-teal"></i>
               </div>
+              <p class="text-[10px] text-midnight/50 mt-1"><i class="fa-solid fa-circle-info"></i> Cari langsung dengan Nomor Klasifikasi DDC (contoh: <strong class="font-mono">701</strong>, <strong class="font-mono">615.4</strong>)</p>
             </div>
 
             <div>
@@ -270,6 +271,11 @@
                       {{ book.stock > 0 ? 'Tersedia' : 'Dipesan' }}
                     </span>
                     <span class="text-xs font-bold text-amber flex items-center gap-1"><i class="fa-solid fa-star"></i> {{ book.popularity }}</span>
+                  </div>
+                  <div v-if="book.classNumber" class="mt-1.5">
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-midnight/8 text-midnight/60 rounded text-[9px] font-mono font-bold border border-midnight/10">
+                      <i class="fa-solid fa-barcode text-[7px]"></i> {{ book.classNumber }}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -756,7 +762,7 @@
               <table class="min-w-full text-xs text-left">
                 <thead class="bg-parchment-light text-midnight font-bold border-b border-parchment-dark">
                   <tr>
-                    <th class="px-4 py-3">ID Buku</th>
+                    <th class="px-4 py-3">ID / No. Klas.</th>
                     <th class="px-4 py-3">Buku / Penulis</th>
                     <th class="px-4 py-3">Genre</th>
                     <th class="px-4 py-3">Tahun</th>
@@ -766,7 +772,10 @@
                 </thead>
                 <tbody class="divide-y divide-parchment-dark text-midnight font-medium">
                   <tr v-for="book in books" :key="book.id" class="hover:bg-parchment-light">
-                    <td class="px-4 py-3 font-mono font-bold text-teal">{{ book.id }}</td>
+                    <td class="px-4 py-3">
+                      <span class="font-mono font-bold text-teal block">{{ book.id }}</span>
+                      <span v-if="book.classNumber" class="text-[10px] text-midnight/55 font-mono"><i class="fa-solid fa-barcode"></i> {{ book.classNumber }}</span>
+                    </td>
                     <td class="px-4 py-3">
                       <div class="flex items-center gap-3">
                         <div class="w-8 aspect-[3/4] rounded shadow-sm overflow-hidden bg-parchment shrink-0 border-l border-black/25">
