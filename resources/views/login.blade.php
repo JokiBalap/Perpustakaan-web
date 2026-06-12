@@ -12,18 +12,22 @@
 
   <!-- Open Graph / Facebook / WhatsApp -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="{{ url()->current() }}">
+  <meta property="og:url" content="{{ preg_replace('/^http:/i', 'https:', url()->current()) }}">
   <meta property="og:title" content="Perpustakaan Digital UNU NTB">
   <meta property="og:description" content="Portal perpustakaan resmi Universitas Nahdlatul Ulama Nusa Tenggara Barat. Cari koleksi buku akademik, karya sastra, jurnal, dan gunakan kurator cerdas berbasis AI.">
-  <meta property="og:image" content="{{ request()->getSchemeAndHttpHost() }}/assets/hero_share.jpg">
+  <meta property="og:image" content="{{ preg_replace('/^http:/i', 'https:', request()->getSchemeAndHttpHost()) }}/assets/hero_share.jpg">
+  <meta property="og:image:secure_url" content="{{ preg_replace('/^http:/i', 'https:', request()->getSchemeAndHttpHost()) }}/assets/hero_share.jpg">
   <meta property="og:image:alt" content="Perpustakaan UNU NTB Hero Banner">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1024">
+  <meta property="og:image:height" content="1024">
 
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image">
-  <meta property="twitter:url" content="{{ url()->current() }}">
+  <meta property="twitter:url" content="{{ preg_replace('/^http:/i', 'https:', url()->current()) }}">
   <meta property="twitter:title" content="Perpustakaan Digital UNU NTB">
   <meta property="twitter:description" content="Portal perpustakaan resmi Universitas Nahdlatul Ulama Nusa Tenggara Barat. Cari koleksi buku akademik, karya sastra, jurnal, dan gunakan kurator cerdas berbasis AI.">
-  <meta property="twitter:image" content="{{ request()->getSchemeAndHttpHost() }}/assets/hero_share.jpg">
+  <meta property="twitter:image" content="{{ preg_replace('/^http:/i', 'https:', request()->getSchemeAndHttpHost()) }}/assets/hero_share.jpg">
   
   <!-- CSRF Token for Axios/Fetch -->
   <meta name="csrf-token" content="{{ csrf_token() }}">
