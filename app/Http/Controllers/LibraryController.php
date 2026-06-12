@@ -291,6 +291,24 @@ class LibraryController extends Controller
         $book = DB::table('books')->where('id', $loan->book_id)->first();
         $student = DB::table('users')->where('id', $loan->user_id)->first();
 
+        // Check if this was a reservation request
+        $reservation = DB::table('reservations')
+            ->where('user_id', $loan->user_id)
+            ->where('book_id', $loan->book_id)
+            ->first();
+
+        if ($reservation) {
+            // Decrement stock for the reservation since it wasn't done during request
+            DB::table('books')->where('id', $loan->book_id)->decrement('stock');
+            
+            // Delete reservation and update queue positions for others
+            DB::table('reservations')->where('id', $reservation->id)->delete();
+            DB::table('reservations')
+                ->where('book_id', $loan->book_id)
+                ->where('queue_position', '>', $reservation->queue_position)
+                ->decrement('queue_position');
+        }
+
         // Create log entry for approval
         DB::table('circulation_logs')->insert([
             'activity' => 'Persetujuan Peminjaman',
@@ -435,6 +453,18 @@ class LibraryController extends Controller
             return response()->json(['message' => 'Anda sudah berada dalam antrean buku ini.'], 400);
         }
 
+        // Create a pending loan record so it shows up in Book Loan Administration
+        $dueDate = (clone $simDate)->addDays(14);
+        $loanId = DB::table('loans')->insertGetId([
+            'book_id' => $bookId,
+            'user_id' => $user->id,
+            'borrow_date' => $simDate,
+            'due_date' => $dueDate,
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
+
         // Get max queue position
         $maxQueue = DB::table('reservations')->where('book_id', $bookId)->max('queue_position') ?: 0;
         $newQueuePosition = $maxQueue + 1;
@@ -450,23 +480,39 @@ class LibraryController extends Controller
 
         DB::table('circulation_logs')->insert([
             'activity' => 'Reservasi Buku',
-            'detail' => "Mahasiswa {$user->name} masuk antrean reservasi untuk '{$book->title}'.",
+            'detail' => "Mahasiswa {$user->name} meminta izin reservasi/pinjaman untuk '{$book->title}'.",
             'timestamp' => $simDate,
             'created_at' => now(),
             'updated_at' => now()
         ]);
 
+        // Send notification to the student
         DB::table('notifications')->insert([
             'user_id' => $user->id,
-            'title' => 'Antrean Reservasi',
-            'message' => "Anda telah masuk dalam daftar antrean reservasi untuk buku '{$book->title}'. Kami akan memberitahu Anda saat buku dikembalikan.",
+            'title' => 'Permintaan Reservasi Diproses',
+            'message' => "Permintaan reservasi Anda untuk buku '{$book->title}' sedang diproses. Menunggu persetujuan pustakawan.",
             'type' => 'hold',
             'is_read' => false,
             'created_at' => $simDate,
             'updated_at' => $simDate
         ]);
 
-        return response()->json(['message' => 'Berhasil bergabung ke antrean reservasi.']);
+        // Send notification to all admins (Pustakawan) for approval
+        $adminIds = DB::table('users')->where('role', 'Pustakawan')->pluck('id');
+        foreach ($adminIds as $adminId) {
+            DB::table('notifications')->insert([
+                'user_id' => $adminId,
+                'title' => 'Permintaan Antrean Reservasi',
+                'message' => "Mahasiswa {$user->name} meminta izin antrean/pinjaman untuk buku '{$book->title}'.",
+                'type' => 'hold',
+                'related_id' => $loanId,
+                'is_read' => false,
+                'created_at' => $simDate,
+                'updated_at' => $simDate
+            ]);
+        }
+
+        return response()->json(['message' => 'Permintaan antrean reservasi berhasil dikirim ke pustakawan.']);
     }
 
     public function cancelReservation(Request $request)

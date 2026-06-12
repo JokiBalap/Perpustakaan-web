@@ -909,14 +909,20 @@
                   <td class="px-4 py-3">{{ formatDisplayDate(loan.borrowDate) }}</td>
                   <td class="px-4 py-3">{{ formatDisplayDate(loan.dueDate) }}</td>
                   <td class="px-4 py-3">
-                    <span :class="['px-2 py-0.5 rounded-full text-[10px] font-bold', loan.status === 'overdue' ? 'bg-danger/10 text-danger' : 'bg-teal/10 text-teal']">
+                    <span v-if="loan.status === 'pending'" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber/10 text-amber">
+                      Menunggu Izin
+                    </span>
+                    <span v-else :class="['px-2 py-0.5 rounded-full text-[10px] font-bold', loan.status === 'overdue' ? 'bg-danger/10 text-danger' : 'bg-teal/10 text-teal']">
                       {{ loan.status === 'overdue' ? 'Terlambat' : 'Aktif' }}
                     </span>
                   </td>
                   <td class="px-4 py-3">
                     <div class="flex gap-2">
-                      <button @click="openEditLoanModal(loan)" class="px-2 py-1 bg-midnight hover:bg-black text-white rounded font-bold"><i class="fa-solid fa-edit"></i></button>
-                      <button @click="adminReturnLoan(loan.id)" class="px-2 py-1 bg-teal hover:bg-teal-dark text-white rounded font-bold" title="Kembalikan Buku"><i class="fa-solid fa-rotate-left"></i></button>
+                      <button v-if="loan.status === 'pending'" @click="approveLoanRequest(loan.id, null)" class="px-2.5 py-1 bg-amber hover:bg-amber-dark text-white rounded font-bold text-[10px] flex items-center gap-1 shadow-sm transition-all animate-pulse" title="Izinkan Peminjaman">
+                        <i class="fa-solid fa-circle-check"></i> Izinkan
+                      </button>
+                      <button @click="openEditLoanModal(loan)" class="px-2 py-1 bg-midnight hover:bg-black text-white rounded font-bold" title="Edit Detail"><i class="fa-solid fa-edit"></i></button>
+                      <button v-if="loan.status !== 'pending'" @click="adminReturnLoan(loan.id)" class="px-2 py-1 bg-teal hover:bg-teal-dark text-white rounded font-bold" title="Kembalikan Buku"><i class="fa-solid fa-rotate-left"></i></button>
                       <button @click="adminDestroyLoan(loan.id)" class="px-2 py-1 bg-danger hover:bg-danger-dark text-white rounded font-bold" title="Hapus Transaksi"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
                   </td>
