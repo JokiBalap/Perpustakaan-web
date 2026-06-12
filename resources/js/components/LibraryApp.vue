@@ -1706,6 +1706,7 @@ export default {
         const matchesSearch = book.title.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
                              book.author.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
                              book.genre.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                             (book.id && book.id.toLowerCase().includes(this.searchQuery.toLowerCase())) ||
                              (book.classNumber && book.classNumber.toLowerCase().includes(this.searchQuery.toLowerCase())) ||
                              (book.isbn && book.isbn.toLowerCase().includes(this.searchQuery.toLowerCase()));
         const matchesGenre = this.selectedGenres.length === 0 || this.selectedGenres.includes(book.genre);
