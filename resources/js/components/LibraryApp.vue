@@ -113,7 +113,7 @@
             <h2 class="text-xl sm:text-2xl md:text-4xl font-extrabold leading-tight text-parchment">Temukan Inspirasi & Pengetahuan di Perpustakaan UNU NTB</h2>
             <p class="mt-3 text-xs sm:text-sm md:text-base text-parchment text-opacity-80">Akses katalog literatur ilmiah, khazanah budaya, dan teknologi masa kini. Dilengkapi dengan asisten rekomendasi AI pribadi Anda.</p>
             <div class="mt-6 sm:mt-8 flex gap-2 max-w-md bg-white rounded-lg p-1 shadow-md">
-              <input type="text" v-model="heroSearchText" @keyup.enter="handleHeroSearch" placeholder="Cari judul, penulis, no. klasifikasi (DDC), atau ISBN..." class="flex-grow px-3 sm:px-4 py-1.5 sm:py-2 text-midnight text-xs sm:text-sm outline-none rounded-lg">
+              <input type="text" v-model="heroSearchText" @keyup.enter="handleHeroSearch" placeholder="Cari judul, penulis, no. klasifikasi DDC (cth: 701, 615.4-WAR-i)..." class="flex-grow px-3 sm:px-4 py-1.5 sm:py-2 text-midnight text-xs sm:text-sm outline-none rounded-lg">
               <button @click="handleHeroSearch" class="bg-teal hover:bg-teal-dark text-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-md font-bold transition-colors flex items-center gap-2 text-xs sm:text-sm">
                 <i class="fa-solid fa-magnifying-glass"></i> <span class="hidden sm:inline">Cari</span>
               </button>
@@ -203,10 +203,20 @@
             <div>
               <h3 class="text-sm font-bold text-midnight mb-3">Pencarian</h3>
               <div class="relative flex items-center">
-                <input type="text" v-model="searchQuery" @keyup.enter="() => {}" placeholder="Ketik judul, penulis, no. klasifikasi (DDC), atau ISBN..." class="w-full px-3 py-2 text-sm border border-parchment-dark rounded outline-none focus:border-teal text-midnight">
+                <input type="text" v-model="searchQuery" @keyup.enter="() => {}" placeholder="Cari judul, penulis, no. klasifikasi DDC (cth: 701, 615.4-WAR-i)..." class="w-full px-3 py-2 text-sm border border-parchment-dark rounded outline-none focus:border-teal text-midnight">
                 <i class="fa-solid fa-magnifying-glass absolute right-3 text-teal"></i>
               </div>
-              <p class="text-[10px] text-midnight/50 mt-1"><i class="fa-solid fa-circle-info"></i> Cari langsung dengan Nomor Klasifikasi DDC (contoh: <strong class="font-mono">701</strong>, <strong class="font-mono">615.4</strong>)</p>
+              <div class="mt-2 p-2 bg-parchment-light rounded-lg border border-parchment-dark">
+                <p class="text-[10px] text-midnight/60 font-bold mb-1"><i class="fa-solid fa-circle-info text-teal"></i> Format No. Klasifikasi DDC:</p>
+                <p class="text-[10px] text-midnight/55 font-mono leading-relaxed">
+                  <span class="text-teal font-bold">615.4</span><span class="text-midnight/40">-</span><span class="text-amber font-bold">WAR</span><span class="text-midnight/40">-</span><span class="text-danger font-bold">i</span>
+                </p>
+                <div class="flex gap-3 mt-1">
+                  <span class="text-[9px] text-teal flex items-center gap-0.5"><span class="font-bold">●</span> No. DDC</span>
+                  <span class="text-[9px] text-amber flex items-center gap-0.5"><span class="font-bold">●</span> 3 Huruf Penulis</span>
+                  <span class="text-[9px] text-danger flex items-center gap-0.5"><span class="font-bold">●</span> 1 Huruf Judul</span>
+                </div>
+              </div>
             </div>
 
             <div>
