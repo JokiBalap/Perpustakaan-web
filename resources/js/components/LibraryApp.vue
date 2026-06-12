@@ -83,16 +83,21 @@
     </header>
 
     <!-- DATE SIMULATION BAR -->
-    <div class="bg-midnight-light border-b border-black border-opacity-30 py-2">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-white text-xs">
-        <div class="flex items-center gap-2">
-          <i class="fa-solid fa-clock text-teal-light text-sm"></i>
-          <span>Waktu Realtime: <strong class="text-teal-light" id="sim-current-date-badge">{{ formattedSimDate }}</strong></span>
+    <div class="bg-gradient-to-r from-midnight-light via-midnight to-midnight-light border-b border-teal/15 py-1.5 px-3 shadow-inner">
+      <div class="max-w-7xl mx-auto flex items-center justify-between gap-2 text-white text-[11px] md:text-xs">
+        <!-- Clock widget with dynamic pulsing/spinning effect -->
+        <div class="flex items-center gap-1.5 bg-white bg-opacity-5 px-3 py-1 rounded-full border border-white/10 hover:border-teal/30 transition-all duration-300">
+          <i class="fa-solid fa-clock text-teal-light animate-spin-slow text-xs"></i>
+          <span class="font-mono font-bold text-teal-light tracking-wide" id="sim-current-date-badge">{{ formattedSimDate }}</span>
         </div>
-        <div class="flex items-center gap-2">
-          <span>Lakukan Perjalanan Waktu:</span>
-          <button @click="simulateTime(1)" class="px-2.5 py-1 bg-teal hover:bg-teal-dark rounded font-bold transition-colors">+1 Hari</button>
-          <button @click="simulateTime(7)" class="px-2.5 py-1 bg-teal hover:bg-teal-dark rounded font-bold transition-colors">+7 Hari</button>
+        <!-- Time Travel buttons grouped inside a sleek pill -->
+        <div class="flex items-center gap-1.5 bg-white bg-opacity-5 p-0.5 rounded-full border border-white/10">
+          <button @click="simulateTime(1)" class="px-3 py-1 bg-teal/20 hover:bg-teal text-white text-[10px] md:text-xs font-bold rounded-full transition-all duration-300 transform active:scale-95 shadow-sm border border-teal/30 hover:border-teal flex items-center gap-1">
+            <i class="fa-solid fa-forward-step text-[9px] md:text-xs"></i> +1 Hari
+          </button>
+          <button @click="simulateTime(7)" class="px-3 py-1 bg-teal/20 hover:bg-teal text-white text-[10px] md:text-xs font-bold rounded-full transition-all duration-300 transform active:scale-95 shadow-sm border border-teal/30 hover:border-teal flex items-center gap-1">
+            <i class="fa-solid fa-forward text-[9px] md:text-xs"></i> +7 Hari
+          </button>
         </div>
       </div>
     </div>
@@ -2253,10 +2258,17 @@ export default {
   from { opacity: 0; transform: scale(0.95); }
   to { opacity: 1; transform: scale(1); }
 }
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 .animate-fadeIn {
   animation: fadeIn 0.4s ease-out forwards;
 }
 .animate-scaleUp {
   animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.animate-spin-slow {
+  animation: spin-slow 12s linear infinite;
 }
 </style>
