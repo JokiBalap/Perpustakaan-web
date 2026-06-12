@@ -113,7 +113,7 @@
             <h2 class="text-xl sm:text-2xl md:text-4xl font-extrabold leading-tight text-parchment">Temukan Inspirasi & Pengetahuan di Perpustakaan UNU NTB</h2>
             <p class="mt-3 text-xs sm:text-sm md:text-base text-parchment text-opacity-80">Akses katalog literatur ilmiah, khazanah budaya, dan teknologi masa kini. Dilengkapi dengan asisten rekomendasi AI pribadi Anda.</p>
             <div class="mt-6 sm:mt-8 flex gap-2 max-w-md bg-white rounded-lg p-1 shadow-md">
-              <input type="text" v-model="heroSearchText" placeholder="Cari judul, penulis, atau genre..." class="flex-grow px-3 sm:px-4 py-1.5 sm:py-2 text-midnight text-xs sm:text-sm outline-none rounded-lg">
+              <input type="text" v-model="heroSearchText" placeholder="Cari judul, penulis, genre, nomor klasifikasi, atau ISBN..." class="flex-grow px-3 sm:px-4 py-1.5 sm:py-2 text-midnight text-xs sm:text-sm outline-none rounded-lg">
               <button @click="handleHeroSearch" class="bg-teal hover:bg-teal-dark text-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-md font-bold transition-colors flex items-center gap-2 text-xs sm:text-sm">
                 <i class="fa-solid fa-magnifying-glass"></i> <span class="hidden sm:inline">Cari</span>
               </button>
@@ -203,7 +203,7 @@
             <div>
               <h3 class="text-sm font-bold text-midnight mb-3">Pencarian</h3>
               <div class="relative flex items-center">
-                <input type="text" v-model="searchQuery" placeholder="Masukkan judul/penulis..." class="w-full px-3 py-2 text-sm border border-parchment-dark rounded outline-none focus:border-teal text-midnight">
+                <input type="text" v-model="searchQuery" placeholder="Masukkan judul, penulis, nomor klasifikasi, atau ISBN..." class="w-full px-3 py-2 text-sm border border-parchment-dark rounded outline-none focus:border-teal text-midnight">
                 <i class="fa-solid fa-magnifying-glass absolute right-3 text-teal"></i>
               </div>
             </div>
