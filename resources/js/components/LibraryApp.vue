@@ -527,20 +527,34 @@
                             </div>
                           </div>
                         </td>
-                        <td class="px-4 py-3">{{ formatDisplayDate(loan.borrowDate) }}</td>
-                        <td class="px-4 py-3">{{ formatDisplayDate(loan.dueDate) }}</td>
                         <td class="px-4 py-3">
-                          <div class="flex flex-col gap-1 w-24">
-                            <span :class="['font-bold text-[10px]', getDaysDiffClass(loan.dueDate)]">
-                              {{ getDaysDiffText(loan.dueDate) }}
-                            </span>
-                            <div class="w-full bg-parchment-dark h-1 rounded-full overflow-hidden">
-                              <div :class="['h-full', getDaysDiffBarClass(loan.dueDate)]" :style="{ width: getProgressPercent(loan.borrowDate, loan.dueDate) + '%' }"></div>
-                            </div>
-                          </div>
+                          <span v-if="loan.status === 'pending'" class="text-midnight opacity-55 italic">-</span>
+                          <span v-else>{{ formatDisplayDate(loan.borrowDate) }}</span>
                         </td>
                         <td class="px-4 py-3">
-                          <button @click="returnBook(loan.bookId)" class="px-3 py-1 bg-teal hover:bg-teal-dark text-white rounded font-bold">Kembalikan</button>
+                          <span v-if="loan.status === 'pending'" class="text-midnight opacity-55 italic">-</span>
+                          <span v-else>{{ formatDisplayDate(loan.dueDate) }}</span>
+                        </td>
+                        <td class="px-4 py-3">
+                          <template v-if="loan.status === 'pending'">
+                            <span class="px-2.5 py-1 text-[10px] font-bold bg-amber/10 text-amber rounded-full inline-flex items-center gap-1 border border-amber/20">
+                              <i class="fa-solid fa-spinner animate-spin"></i> Sedang Diproses
+                            </span>
+                          </template>
+                          <template v-else>
+                            <div class="flex flex-col gap-1 w-24">
+                              <span :class="['font-bold text-[10px]', getDaysDiffClass(loan.dueDate)]">
+                                {{ getDaysDiffText(loan.dueDate) }}
+                              </span>
+                              <div class="w-full bg-parchment-dark h-1 rounded-full overflow-hidden">
+                                <div :class="['h-full', getDaysDiffBarClass(loan.dueDate)]" :style="{ width: getProgressPercent(loan.borrowDate, loan.dueDate) + '%' }"></div>
+                              </div>
+                            </div>
+                          </template>
+                        </td>
+                        <td class="px-4 py-3">
+                          <span v-if="loan.status === 'pending'" class="text-xs font-bold text-amber bg-amber/5 px-2 py-1 rounded border border-amber/15">Menunggu Izin</span>
+                          <button v-else @click="returnBook(loan.bookId)" class="px-3 py-1 bg-teal hover:bg-teal-dark text-white rounded font-bold">Kembalikan</button>
                         </td>
                       </tr>
                     </template>
@@ -1151,6 +1165,11 @@
                 <span class="text-[9px] text-midnight opacity-65 font-mono">{{ formatDisplayDateTime(notif.time) }}</span>
               </div>
               <p class="text-xs text-midnight opacity-80 mt-1 font-medium">{{ notif.message }}</p>
+              <div v-if="notif.type === 'hold' && notif.related_id && currentUser.role === 'Pustakawan'" class="mt-3 flex gap-2">
+                <button @click.stop="approveLoanRequest(notif.related_id, notif.id)" class="px-4 py-1.5 bg-amber hover:bg-amber-dark text-white rounded font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all">
+                  <i class="fa-solid fa-circle-check"></i> Izinkan
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1763,7 +1782,7 @@ export default {
     }, 1000);
     this.pollingInterval = setInterval(() => {
       this.fetchState();
-    }, 5000);
+    }, 2000);
   },
   beforeUnmount() {
     if (this.simTimerInterval) {
@@ -1976,6 +1995,18 @@ export default {
         await this.fetchState();
       } catch (err) {
         this.showToastMsg(err.response?.data?.message || 'Gagal mengembalikan buku.', 'danger');
+      }
+    },
+    async approveLoanRequest(loanId, notificationId) {
+      try {
+        const res = await axios.post('/api/loans/approve', { loanId });
+        this.showToastMsg(res.data.message, 'success');
+        if (notificationId) {
+          await axios.post(`/api/notifications/${notificationId}/read`);
+        }
+        await this.fetchState();
+      } catch (err) {
+        this.showToastMsg(err.response?.data?.message || 'Gagal menyetujui peminjaman.', 'danger');
       }
     },
     async joinReservation(bookId) {

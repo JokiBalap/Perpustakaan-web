@@ -101,6 +101,7 @@ class LibraryController extends Controller
                         'title' => $title,
                         'message' => $n->message,
                         'type' => $n->type,
+                        'related_id' => $n->related_id,
                         'unread' => !$n->is_read,
                         'time' => $n->created_at
                     ];
@@ -206,17 +207,32 @@ class LibraryController extends Controller
         // Decrement stock
         DB::table('books')->where('id', $bookId)->decrement('stock');
 
-        // Create loan record (14 days period)
+        // Create loan record (14 days period) with pending status
         $dueDate = (clone $simDate)->addDays(14);
-        DB::table('loans')->insert([
+        $loanId = DB::table('loans')->insertGetId([
             'book_id' => $bookId,
             'user_id' => $user->id,
             'borrow_date' => $simDate,
             'due_date' => $dueDate,
-            'status' => 'active',
+            'status' => 'pending',
             'created_at' => now(),
-            'updated_at' => now()
+            'updated_at' => now(),
         ]);
+
+        // Notify admin (all librarians) about pending loan request
+        $adminIds = DB::table('users')->where('role', 'Pustakawan')->pluck('id');
+        foreach ($adminIds as $adminId) {
+            DB::table('notifications')->insert([
+                'user_id' => $adminId,
+                'title' => 'Permintaan Pinjam Instan',
+                'message' => "Mahasiswa {$user->name} meminta pinjaman buku '{$book->title}'.",
+                'type' => 'hold', // indicates pending approval
+                'related_id' => $loanId,
+                'is_read' => false,
+                'created_at' => $simDate,
+                'updated_at' => $simDate,
+            ]);
+        }
 
         // Remove from wishlist if it was there
         $wishlist = json_decode($user->wishlist ?: '[]', true);
@@ -245,6 +261,63 @@ class LibraryController extends Controller
         ]);
 
         return response()->json(['message' => 'Peminjaman berhasil diproses.']);
+    }
+
+    public function approveLoan(Request $request)
+    {
+        $user = Auth::user();
+        if ($user->role !== 'Pustakawan') {
+            return response()->json(['message' => 'Hanya pustakawan yang dapat menyetujui peminjaman.'], 403);
+        }
+
+        $loanId = $request->input('loanId');
+        $simDate = $this->CarbonSimDate();
+
+        $loan = DB::table('loans')->where('id', $loanId)->first();
+        if (!$loan) {
+            return response()->json(['message' => 'Data peminjaman tidak ditemukan.'], 404);
+        }
+
+        if ($loan->status !== 'pending') {
+            return response()->json(['message' => 'Status peminjaman tidak pending.'], 400);
+        }
+
+        // Change status to active
+        DB::table('loans')->where('id', $loanId)->update([
+            'status' => 'active',
+            'updated_at' => now()
+        ]);
+
+        $book = DB::table('books')->where('id', $loan->book_id)->first();
+        $student = DB::table('users')->where('id', $loan->user_id)->first();
+
+        // Create log entry for approval
+        DB::table('circulation_logs')->insert([
+            'activity' => 'Persetujuan Peminjaman',
+            'detail' => "Pustakawan {$user->name} menyetujui peminjaman buku '{$book->title}' untuk mahasiswa {$student->name}.",
+            'timestamp' => $simDate,
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
+
+        // Mark the hold/pending notification as read
+        DB::table('notifications')
+            ->where('related_id', $loanId)
+            ->where('type', 'hold')
+            ->update(['is_read' => true]);
+
+        // Send a success notification to the student
+        DB::table('notifications')->insert([
+            'user_id' => $loan->user_id,
+            'title' => 'Persetujuan Peminjaman',
+            'message' => "Permintaan pinjam instan untuk buku '{$book->title}' telah disetujui. Tanggal Jatuh Tempo: " . \Carbon\Carbon::parse($loan->due_date)->locale('id')->isoFormat('D MMM YYYY') . ".",
+            'type' => 'info',
+            'is_read' => false,
+            'created_at' => $simDate,
+            'updated_at' => $simDate
+        ]);
+
+        return response()->json(['message' => 'Peminjaman berhasil disetujui.']);
     }
 
     public function returnBook(Request $request)

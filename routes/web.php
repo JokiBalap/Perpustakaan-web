@@ -38,6 +38,7 @@ Route::group(['prefix' => 'api', 'middleware' => 'auth'], function () {
     
     Route::post('/loans', [LibraryController::class, 'borrowBook']);
     Route::post('/loans/return', [LibraryController::class, 'returnBook']);
+    Route::post('/loans/approve', [LibraryController::class, 'approveLoan']);
     
     // Admin specific circulation controls
     Route::post('/admin/loans', [LibraryController::class, 'adminCreateLoan']);
