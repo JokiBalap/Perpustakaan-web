@@ -278,64 +278,154 @@ class LibraryController extends Controller
             return response()->json(['message' => 'Data peminjaman tidak ditemukan.'], 404);
         }
 
-        if ($loan->status !== 'pending') {
-            return response()->json(['message' => 'Status peminjaman tidak pending.'], 400);
-        }
+        if ($loan->status === 'pending') {
+            // Persetujuan Peminjaman
+            // Change status to active
+            DB::table('loans')->where('id', $loanId)->update([
+                'status' => 'active',
+                'updated_at' => now()
+            ]);
 
-        // Change status to active
-        DB::table('loans')->where('id', $loanId)->update([
-            'status' => 'active',
-            'updated_at' => now()
-        ]);
+            $book = DB::table('books')->where('id', $loan->book_id)->first();
+            $student = DB::table('users')->where('id', $loan->user_id)->first();
 
-        $book = DB::table('books')->where('id', $loan->book_id)->first();
-        $student = DB::table('users')->where('id', $loan->user_id)->first();
-
-        // Check if this was a reservation request
-        $reservation = DB::table('reservations')
-            ->where('user_id', $loan->user_id)
-            ->where('book_id', $loan->book_id)
-            ->first();
-
-        if ($reservation) {
-            // Decrement stock for the reservation since it wasn't done during request
-            DB::table('books')->where('id', $loan->book_id)->decrement('stock');
-            
-            // Delete reservation and update queue positions for others
-            DB::table('reservations')->where('id', $reservation->id)->delete();
-            DB::table('reservations')
+            // Check if this was a reservation request
+            $reservation = DB::table('reservations')
+                ->where('user_id', $loan->user_id)
                 ->where('book_id', $loan->book_id)
-                ->where('queue_position', '>', $reservation->queue_position)
-                ->decrement('queue_position');
+                ->first();
+
+            if ($reservation) {
+                // Decrement stock for the reservation since it wasn't done during request
+                DB::table('books')->where('id', $loan->book_id)->decrement('stock');
+                
+                // Delete reservation and update queue positions for others
+                DB::table('reservations')->where('id', $reservation->id)->delete();
+                DB::table('reservations')
+                    ->where('book_id', $loan->book_id)
+                    ->where('queue_position', '>', $reservation->queue_position)
+                    ->decrement('queue_position');
+            }
+
+            // Create log entry for approval
+            DB::table('circulation_logs')->insert([
+                'activity' => 'Persetujuan Peminjaman',
+                'detail' => "Pustakawan {$user->name} menyetujui peminjaman buku '{$book->title}' untuk mahasiswa {$student->name}.",
+                'timestamp' => $simDate,
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+
+            // Mark the hold/pending notification as read
+            DB::table('notifications')
+                ->where('related_id', $loanId)
+                ->where('type', 'hold')
+                ->update(['is_read' => true]);
+
+            // Send a success notification to the student
+            DB::table('notifications')->insert([
+                'user_id' => $loan->user_id,
+                'title' => 'Persetujuan Peminjaman',
+                'message' => "Permintaan pinjam instan untuk buku '{$book->title}' telah disetujui. Tanggal Jatuh Tempo: " . \Carbon\Carbon::parse($loan->due_date)->locale('id')->isoFormat('D MMM YYYY') . ".",
+                'type' => 'info',
+                'is_read' => false,
+                'created_at' => $simDate,
+                'updated_at' => $simDate
+            ]);
+
+            return response()->json(['message' => 'Peminjaman berhasil disetujui.']);
+
+        } elseif ($loan->status === 'pending_return') {
+            // Persetujuan Pengembalian
+            // Change status to returned
+            DB::table('loans')->where('id', $loanId)->update([
+                'status' => 'returned',
+                'updated_at' => now()
+            ]);
+
+            $book = DB::table('books')->where('id', $loan->book_id)->first();
+            $student = DB::table('users')->where('id', $loan->user_id)->first();
+
+            // Create log entry for return approval
+            DB::table('circulation_logs')->insert([
+                'activity' => 'Persetujuan Pengembalian',
+                'detail' => "Pustakawan {$user->name} menyetujui pengembalian buku '{$book->title}' oleh mahasiswa {$student->name}.",
+                'timestamp' => $simDate,
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+
+            // Mark the hold/pending notification as read
+            DB::table('notifications')
+                ->where('related_id', $loanId)
+                ->where('type', 'hold')
+                ->update(['is_read' => true]);
+
+            // Send a success notification to the student
+            DB::table('notifications')->insert([
+                'user_id' => $loan->user_id,
+                'title' => 'Pengembalian Berhasil',
+                'message' => "Buku '{$book->title}' telah berhasil dikembalikan ke perpustakaan.",
+                'type' => 'info',
+                'is_read' => false,
+                'created_at' => $simDate,
+                'updated_at' => $simDate
+            ]);
+
+            // Queue logic: Check if another student has reserved this book
+            $nextReservation = DB::table('reservations')
+                ->where('book_id', $loan->book_id)
+                ->orderBy('queue_position', 'asc')
+                ->first();
+
+            if ($nextReservation) {
+                // Allocate the book to this user!
+                DB::table('reservations')->where('id', $nextReservation->id)->delete();
+                
+                // Adjust other queue positions for this book
+                DB::table('reservations')
+                    ->where('book_id', $loan->book_id)
+                    ->decrement('queue_position');
+
+                $nextUser = DB::table('users')->where('id', $nextReservation->user_id)->first();
+                $dueDate = (clone $simDate)->addDays(14);
+                
+                DB::table('loans')->insert([
+                    'book_id' => $loan->book_id,
+                    'user_id' => $nextUser->id,
+                    'borrow_date' => $simDate,
+                    'due_date' => $dueDate,
+                    'status' => 'active',
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+
+                DB::table('circulation_logs')->insert([
+                    'activity' => 'Pemberian Antrean',
+                    'detail' => "Buku '{$book->title}' dialokasikan dari daftar reservasi ke Mahasiswa {$nextUser->name}.",
+                    'timestamp' => $simDate,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+
+                DB::table('notifications')->insert([
+                    'user_id' => $nextUser->id,
+                    'title' => 'Reservasi Siap & Dipinjam',
+                    'message' => "Buku '{$book->title}' yang Anda antre sekarang tersedia dan otomatis dipinjamkan ke akun Anda. Jatuh tempo: {$dueDate->locale('id')->isoFormat('D MMM YYYY')}.",
+                    'type' => 'hold',
+                    'is_read' => false,
+                    'created_at' => $simDate,
+                    'updated_at' => $simDate
+                ]);
+            } else {
+                // Increment stock
+                DB::table('books')->where('id', $loan->book_id)->increment('stock');
+            }
+
+            return response()->json(['message' => 'Pengembalian berhasil disetujui.']);
         }
 
-        // Create log entry for approval
-        DB::table('circulation_logs')->insert([
-            'activity' => 'Persetujuan Peminjaman',
-            'detail' => "Pustakawan {$user->name} menyetujui peminjaman buku '{$book->title}' untuk mahasiswa {$student->name}.",
-            'timestamp' => $simDate,
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
-
-        // Mark the hold/pending notification as read
-        DB::table('notifications')
-            ->where('related_id', $loanId)
-            ->where('type', 'hold')
-            ->update(['is_read' => true]);
-
-        // Send a success notification to the student
-        DB::table('notifications')->insert([
-            'user_id' => $loan->user_id,
-            'title' => 'Persetujuan Peminjaman',
-            'message' => "Permintaan pinjam instan untuk buku '{$book->title}' telah disetujui. Tanggal Jatuh Tempo: " . \Carbon\Carbon::parse($loan->due_date)->locale('id')->isoFormat('D MMM YYYY') . ".",
-            'type' => 'info',
-            'is_read' => false,
-            'created_at' => $simDate,
-            'updated_at' => $simDate
-        ]);
-
-        return response()->json(['message' => 'Peminjaman berhasil disetujui.']);
+        return response()->json(['message' => 'Status peminjaman tidak valid untuk disetujui.'], 400);
     }
 
     public function returnBook(Request $request)
@@ -354,83 +444,53 @@ class LibraryController extends Controller
             return response()->json(['message' => 'Transaksi peminjaman tidak aktif.'], 404);
         }
 
+        if ($loan->status === 'pending_return') {
+            return response()->json(['message' => 'Pengembalian buku ini sedang diproses.'], 400);
+        }
+
         $book = DB::table('books')->where('id', $bookId)->first();
 
-        // Update loan status
+        // Update loan status to pending_return
         DB::table('loans')->where('id', $loan->id)->update([
-            'status' => 'returned',
+            'status' => 'pending_return',
             'updated_at' => now()
         ]);
 
         DB::table('circulation_logs')->insert([
-            'activity' => 'Pengembalian Buku',
-            'detail' => "Mahasiswa {$user->name} mengembalikan '{$book->title}' yang dipinjam pada " . Carbon::parse($loan->borrow_date)->locale('id')->isoFormat('D MMM YYYY') . ".",
+            'activity' => 'Permintaan Pengembalian',
+            'detail' => "Mahasiswa {$user->name} mengajukan pengembalian buku '{$book->title}'.",
             'timestamp' => $simDate,
             'created_at' => now(),
             'updated_at' => now()
         ]);
 
+        // Notify student that it is being processed
         DB::table('notifications')->insert([
             'user_id' => $user->id,
-            'title' => 'Pengembalian Berhasil',
-            'message' => "Buku '{$book->title}' telah berhasil dikembalikan ke perpustakaan.",
+            'title' => 'Pengembalian Diproses',
+            'message' => "Pengembalian buku '{$book->title}' sedang diproses. Menunggu persetujuan pustakawan.",
             'type' => 'info',
             'is_read' => false,
             'created_at' => $simDate,
             'updated_at' => $simDate
         ]);
 
-        // Queue logic: Check if another student has reserved this book
-        $nextReservation = DB::table('reservations')
-            ->where('book_id', $bookId)
-            ->orderBy('queue_position', 'asc')
-            ->first();
-
-        if ($nextReservation) {
-            // Allocate the book to this user!
-            DB::table('reservations')->where('id', $nextReservation->id)->delete();
-            
-            // Adjust other queue positions for this book
-            DB::table('reservations')
-                ->where('book_id', $bookId)
-                ->decrement('queue_position');
-
-            $nextUser = DB::table('users')->where('id', $nextReservation->user_id)->first();
-            $dueDate = (clone $simDate)->addDays(14);
-            
-            DB::table('loans')->insert([
-                'book_id' => $bookId,
-                'user_id' => $nextUser->id,
-                'borrow_date' => $simDate,
-                'due_date' => $dueDate,
-                'status' => 'active',
-                'created_at' => now(),
-                'updated_at' => now()
-            ]);
-
-            DB::table('circulation_logs')->insert([
-                'activity' => 'Pemberian Antrean',
-                'detail' => "Buku '{$book->title}' dialokasikan dari daftar reservasi ke Mahasiswa {$nextUser->name}.",
-                'timestamp' => $simDate,
-                'created_at' => now(),
-                'updated_at' => now()
-            ]);
-
+        // Notify admins (all librarians) about pending return request
+        $adminIds = DB::table('users')->where('role', 'Pustakawan')->pluck('id');
+        foreach ($adminIds as $adminId) {
             DB::table('notifications')->insert([
-                'user_id' => $nextUser->id,
-                'title' => 'Reservasi Siap & Dipinjam',
-                'message' => "Buku '{$book->title}' yang Anda antre sekarang tersedia dan otomatis dipinjamkan ke akun Anda. Jatuh tempo: {$dueDate->locale('id')->isoFormat('D MMM YYYY')}.",
-                'type' => 'hold',
+                'user_id' => $adminId,
+                'title' => 'Permintaan Pengembalian Buku',
+                'message' => "Mahasiswa {$user->name} ingin mengembalikan buku '{$book->title}'.",
+                'type' => 'hold', // indicates action required
+                'related_id' => $loan->id,
                 'is_read' => false,
                 'created_at' => $simDate,
-                'updated_at' => $simDate
+                'updated_at' => $simDate,
             ]);
-        } else {
-            // Increment stock
-            DB::table('books')->where('id', $bookId)->increment('stock');
         }
 
-        return response()->json(['message' => 'Buku berhasil dikembalikan.']);
+        return response()->json(['message' => 'Permintaan pengembalian buku berhasil diajukan.']);
     }
 
     public function joinReservation(Request $request)
