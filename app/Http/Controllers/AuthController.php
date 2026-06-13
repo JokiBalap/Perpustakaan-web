@@ -7,8 +7,29 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    public function showLogin()
+    public function showLogin(Request $request)
     {
+        // Auto-login via Cloudflare Access SSO header
+        $ssoEmail = $request->header('X-Auth-Email');
+        if ($ssoEmail) {
+            $user = \DB::table('users')->where('email', $ssoEmail)->first();
+            if ($user) {
+                Auth::loginUsingId($user->id);
+                $request->session()->regenerate();
+                
+                // Log circulation activity
+                \DB::table('circulation_logs')->insert([
+                    'activity' => 'SSO Login',
+                    'detail' => "{$user->role} {$user->name} ({$user->nim}) masuk otomatis via Cloudflare Access.",
+                    'timestamp' => $this->CarbonSimDate(),
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+
+                return redirect('/');
+            }
+        }
+
         if (Auth::check()) {
             return redirect('/');
         }

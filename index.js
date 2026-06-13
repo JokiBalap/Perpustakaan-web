@@ -32,6 +32,17 @@ export default {
 
     const targetUrl = new URL(env.TUNNEL_URL + url.pathname + url.search);
     const proxyHeaders = new Headers(request.headers);
+    proxyHeaders.delete("X-Auth-Email"); // Prevent header spoofing
+
+    try {
+      const parts = jwt.split('.');
+      const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+      if (payload && payload.email) {
+        proxyHeaders.set("X-Auth-Email", payload.email);
+      }
+    } catch (e) {
+      console.error("Error parsing JWT payload:", e);
+    }
 
     const proxyRequest = new Request(targetUrl, {
       method: request.method,
