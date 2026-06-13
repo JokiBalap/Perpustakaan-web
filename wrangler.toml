@@ -1,0 +1,8 @@
+name = "perpustakaan-unu"
+main = "index.js"
+compatibility_date = "2024-03-01"
+
+[vars]
+TUNNEL_URL = "https://fioricet-athletic-aviation-change.trycloudflare.com"
+JWKS_URL = "https://candra12.cloudflareaccess.com/cdn-cgi/access/certs"
+AUDIENCE = "7e97613bf9c76826850d1d7d3f589924da9b710a10bdbe543400a709e31511f8"
