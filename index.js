@@ -8,7 +8,8 @@ export default {
     const jwt = request.headers.get("Cf-Access-Jwt-Assertion") || getCookie(request, "CF_Authorization");
     if (!jwt) {
       if (isHtml) {
-        return Response.redirect(`https://candra12.cloudflareaccess.com/cdn-cgi/access/login/${url.hostname}`, 302);
+        const redirectUrl = encodeURIComponent("https://" + url.hostname + url.pathname + url.search);
+        return Response.redirect(`https://candra12.cloudflareaccess.com/cdn-cgi/access/login?redirect_url=${redirectUrl}`, 302);
       }
       return new Response("Missing Cf-Access-Jwt-Assertion header or CF_Authorization cookie.", { status: 401 });
     }
@@ -17,7 +18,8 @@ export default {
       const isValid = await verifyToken(jwt, env.JWKS_URL, env.AUDIENCE);
       if (!isValid) {
         if (isHtml) {
-          return Response.redirect(`https://candra12.cloudflareaccess.com/cdn-cgi/access/login/${url.hostname}`, 302);
+          const redirectUrl = encodeURIComponent("https://" + url.hostname + url.pathname + url.search);
+          return Response.redirect(`https://candra12.cloudflareaccess.com/cdn-cgi/access/login?redirect_url=${redirectUrl}`, 302);
         }
         return new Response("Invalid Cloudflare Access Token.", { status: 403 });
       }
