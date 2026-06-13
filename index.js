@@ -1,16 +1,24 @@
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    
-    // 1. Verify Cloudflare Access JWT Assertion
-    const jwt = request.headers.get("Cf-Access-Jwt-Assertion");
+    const accept = request.headers.get("Accept") || "";
+    const isHtml = accept.includes("text/html");
+
+    // 1. Extract JWT from header or cookie
+    const jwt = request.headers.get("Cf-Access-Jwt-Assertion") || getCookie(request, "CF_Authorization");
     if (!jwt) {
-      return new Response("Missing Cf-Access-Jwt-Assertion header. Please access through Cloudflare Access.", { status: 401 });
+      if (isHtml) {
+        return Response.redirect(`https://candra12.cloudflareaccess.com/cdn-cgi/access/login/${url.hostname}`, 302);
+      }
+      return new Response("Missing Cf-Access-Jwt-Assertion header or CF_Authorization cookie.", { status: 401 });
     }
 
     try {
       const isValid = await verifyToken(jwt, env.JWKS_URL, env.AUDIENCE);
       if (!isValid) {
+        if (isHtml) {
+          return Response.redirect(`https://candra12.cloudflareaccess.com/cdn-cgi/access/login/${url.hostname}`, 302);
+        }
         return new Response("Invalid Cloudflare Access Token.", { status: 403 });
       }
     } catch (err) {
@@ -40,6 +48,20 @@ export default {
     }
   }
 };
+
+// Helper to extract cookies in Worker
+function getCookie(request, name) {
+  const cookieHeader = request.headers.get("Cookie");
+  if (!cookieHeader) return null;
+  const cookies = cookieHeader.split(";");
+  for (let cookie of cookies) {
+    const [key, val] = cookie.trim().split("=");
+    if (key === name) {
+      return decodeURIComponent(val);
+    }
+  }
+  return null;
+}
 
 // Verify JWT using Web Crypto API inside Workers
 async function verifyToken(jwt, jwksUrl, audience) {
