@@ -6,7 +6,7 @@
   <title>Perpustakaan Digital UNU NTB - Jendela Akademik & Heritage</title>
   
   <!-- SEO Meta Tags -->
-  <meta name="description" content="Portal perpustakaan resmi Universitas Nahdlatul Ulama Nusa Tenggara Barat. Cari koleksi buku akademik, karya sastra, jurnal, dan gunakan kurator cerdas berbasis AI.">
+  <meta name="description" content="Layanan Perpustakaan Digital resmi Universitas Nahdlatul Ulama Nusa Tenggara Barat (UNU NTB). Akses ribuan katalog buku, karya ilmiah, riset akademik, dan asisten pintar rekomendasi AI.">
   <meta name="keywords" content="Perpustakaan UNU NTB, Universitas Nahdlatul Ulama, Mataram, Nusa Tenggara Barat, Peminjaman Buku, AI Curator, Perpustakaan Digital">
   <meta name="author" content="Universitas Nahdlatul Ulama NTB">
 
@@ -14,20 +14,20 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="{{ preg_replace('/^http:/i', 'https:', url()->current()) }}">
   <meta property="og:title" content="Perpustakaan Digital UNU NTB">
-  <meta property="og:description" content="Portal perpustakaan resmi Universitas Nahdlatul Ulama Nusa Tenggara Barat. Cari koleksi buku akademik, karya sastra, jurnal, dan gunakan kurator cerdas berbasis AI.">
-  <meta property="og:image" content="{{ preg_replace('/^http:/i', 'https:', request()->getSchemeAndHttpHost()) }}/assets/hero_share.jpg">
-  <meta property="og:image:secure_url" content="{{ preg_replace('/^http:/i', 'https:', request()->getSchemeAndHttpHost()) }}/assets/hero_share.jpg">
-  <meta property="og:image:alt" content="Perpustakaan UNU NTB Hero Banner">
-  <meta property="og:image:type" content="image/jpeg">
-  <meta property="og:image:width" content="1024">
-  <meta property="og:image:height" content="1024">
+  <meta property="og:description" content="Layanan Perpustakaan Digital resmi Universitas Nahdlatul Ulama Nusa Tenggara Barat (UNU NTB). Akses ribuan katalog buku, karya ilmiah, riset akademik, dan asisten pintar rekomendasi AI.">
+  <meta property="og:image" content="{{ preg_replace('/^http:/i', 'https:', request()->getSchemeAndHttpHost()) }}/assets/logo.png">
+  <meta property="og:image:secure_url" content="{{ preg_replace('/^http:/i', 'https:', request()->getSchemeAndHttpHost()) }}/assets/logo.png">
+  <meta property="og:image:alt" content="Logo Perpustakaan UNU NTB">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="512">
+  <meta property="og:image:height" content="512">
 
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image">
   <meta property="twitter:url" content="{{ preg_replace('/^http:/i', 'https:', url()->current()) }}">
   <meta property="twitter:title" content="Perpustakaan Digital UNU NTB">
-  <meta property="twitter:description" content="Portal perpustakaan resmi Universitas Nahdlatul Ulama Nusa Tenggara Barat. Cari koleksi buku akademik, karya sastra, jurnal, dan gunakan kurator cerdas berbasis AI.">
-  <meta property="twitter:image" content="{{ preg_replace('/^http:/i', 'https:', request()->getSchemeAndHttpHost()) }}/assets/hero_share.jpg">
+  <meta property="twitter:description" content="Layanan Perpustakaan Digital resmi Universitas Nahdlatul Ulama Nusa Tenggara Barat (UNU NTB). Akses ribuan katalog buku, karya ilmiah, riset akademik, dan asisten pintar rekomendasi AI.">
+  <meta property="twitter:image" content="{{ preg_replace('/^http:/i', 'https:', request()->getSchemeAndHttpHost()) }}/assets/logo.png">
   
   <!-- CSRF Token for Secure AJAX requests -->
   <meta name="csrf-token" content="{{ csrf_token() }}">
