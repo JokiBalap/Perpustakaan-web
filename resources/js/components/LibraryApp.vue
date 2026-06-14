@@ -959,9 +959,12 @@
 
       <!-- 7. DATA MAHASISWA SECTION (LIBRARIAN ONLY) -->
       <section v-if="activeTab === 'admin-students' && currentUser.role === 'Pustakawan'" class="animate-fadeIn space-y-6">
-        <div class="flex justify-between items-center">
-          <h2 class="text-xl font-bold text-midnight flex items-center gap-2"><i class="fa-solid fa-users text-teal"></i> Manajemen Akun Mahasiswa</h2>
-          <button @click="openAddStudentModal" class="px-4 py-2 bg-teal hover:bg-teal-dark text-white rounded-lg font-bold text-xs shadow transition-colors flex items-center gap-2">
+        <div class="flex flex-col sm:flex-row gap-4 justify-between items-stretch sm:items-center bg-white p-4 rounded-xl border border-parchment-dark shadow-sm">
+          <div class="relative max-w-md w-full">
+            <input type="text" v-model="studentSearchQuery" placeholder="Cari berdasarkan NIM, Nama, atau Prodi..." class="w-full pl-9 pr-4 py-2.5 text-xs border border-parchment-dark rounded-lg outline-none focus:border-teal text-midnight">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-midnight opacity-40 text-xs"></i>
+          </div>
+          <button @click="openAddStudentModal" class="px-4 py-2 bg-teal hover:bg-teal-dark text-white rounded-lg font-bold text-xs shadow transition-colors flex items-center justify-center gap-2 shrink-0">
             <i class="fa-solid fa-user-plus"></i> Tambah Mahasiswa
           </button>
         </div>
@@ -981,10 +984,10 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-parchment-dark text-midnight font-medium">
-                <tr v-if="studentsList.length === 0">
-                  <td colspan="7" class="text-center py-6 text-midnight opacity-55">Tidak ada mahasiswa terdaftar.</td>
+                <tr v-if="filteredStudentsList.length === 0">
+                  <td colspan="7" class="text-center py-6 text-midnight opacity-55">Tidak ada mahasiswa terdaftar yang cocok dengan pencarian.</td>
                 </tr>
-                <tr v-for="student in studentsList" :key="student.id" class="hover:bg-parchment-light">
+                <tr v-for="student in filteredStudentsList" :key="student.id" class="hover:bg-parchment-light">
                   <td class="px-4 py-3 font-mono font-bold text-teal">{{ student.nim }}</td>
                   <td class="px-4 py-3 font-bold text-midnight">{{ student.name }}</td>
                   <td class="px-4 py-3">
@@ -1622,6 +1625,7 @@ export default {
       allLoans: [],
       allReservations: [],
       studentsList: [],
+      studentSearchQuery: '',
       librarianModeActive: false,
       heroSearchText: '',
       
@@ -1732,6 +1736,19 @@ export default {
     }
   },
   computed: {
+    filteredStudentsList() {
+      if (!this.studentSearchQuery) return this.studentsList;
+      const q = this.studentSearchQuery.toLowerCase().trim();
+      return this.studentsList.filter(s => {
+        return (
+          (s.nim && s.nim.toLowerCase().includes(q)) ||
+          (s.name && s.name.toLowerCase().includes(q)) ||
+          (s.email && s.email.toLowerCase().includes(q)) ||
+          (s.prodi && s.prodi.toLowerCase().includes(q)) ||
+          (s.faculty && s.faculty.toLowerCase().includes(q))
+        );
+      });
+    },
     userInitials() {
       if (!this.currentUser.name) return 'U';
       return this.currentUser.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
