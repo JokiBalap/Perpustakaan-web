@@ -1775,13 +1775,29 @@ export default {
       return this.books.filter(b => b.stock === 0);
     },
     filteredBooks() {
+      const q = this.searchQuery ? this.searchQuery.toLowerCase().trim() : '';
       let result = this.books.filter(book => {
-        const matchesSearch = book.title.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-                             book.author.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-                             book.genre.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-                             (book.id && book.id.toLowerCase().includes(this.searchQuery.toLowerCase())) ||
-                             (book.classNumber && book.classNumber.toLowerCase().includes(this.searchQuery.toLowerCase())) ||
-                             (book.isbn && book.isbn.toLowerCase().includes(this.searchQuery.toLowerCase()));
+        // Compute Call Number components dynamically for search matching
+        const words = book.author ? book.author.replace(/[^a-zA-Z\s]/g, '').trim().split(/\s+/) : [];
+        const lastWord = words.length > 1 ? words[words.length - 1] : (words[0] || '');
+        const depanTajuk = lastWord.substring(0, 3).toUpperCase();
+        
+        const cleanTitle = book.title ? book.title.replace(/[^a-zA-Z]/g, '').trim() : '';
+        const satuHurufJudul = cleanTitle.substring(0, 1).toLowerCase();
+        
+        const callNumber = `${book.classNumber || ''} ${depanTajuk} ${satuHurufJudul}`.toLowerCase().trim();
+
+        const matchesSearch = !q || (
+          book.title.toLowerCase().includes(q) ||
+          book.author.toLowerCase().includes(q) ||
+          book.genre.toLowerCase().includes(q) ||
+          (book.id && book.id.toLowerCase().includes(q)) ||
+          (book.classNumber && book.classNumber.toLowerCase().includes(q)) ||
+          (book.isbn && book.isbn.toLowerCase().includes(q)) ||
+          depanTajuk.toLowerCase().includes(q) ||
+          satuHurufJudul.toLowerCase().includes(q) ||
+          callNumber.includes(q)
+        );
         const matchesGenre = this.selectedGenres.length === 0 || this.selectedGenres.includes(book.genre);
         const matchesAvailable = !this.availableOnly || book.stock > 0;
         return matchesSearch && matchesGenre && matchesAvailable;
@@ -2110,11 +2126,11 @@ export default {
           });
           
           if (this.curatorStyle === 'academic') {
-            if (['Philosophy', 'Science', 'Technology'].includes(book.genre)) score += 5;
+            if (['Filsafat & Psikologi', 'Sains & Matematika', 'Teknologi & Ilmu Terapan'].includes(book.genre)) score += 5;
           } else if (this.curatorStyle === 'light') {
-            if (book.genre === 'Drama') score += 5;
+            if (book.genre === 'Kesusastraan') score += 5;
           } else if (this.curatorStyle === 'narrative') {
-            if (['Historical Fiction', 'Magical Realism', 'Modern Literature'].includes(book.genre)) score += 5;
+            if (['Kesusastraan', 'Sejarah & Geografi'].includes(book.genre)) score += 5;
           }
           
           score += book.popularity * 0.05;
