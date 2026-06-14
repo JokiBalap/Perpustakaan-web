@@ -105,7 +105,22 @@ class LibraryController extends Controller
                         'unread' => !$n->is_read,
                         'time' => $n->created_at
                     ];
-                });
+                })->all();
+
+            if ($user->role === 'Pustakawan') {
+                $outOfStock = DB::table('books')->where('stock', 0)->get();
+                foreach ($outOfStock as $b) {
+                    array_unshift($notifications, [
+                        'id' => 'restock-' . $b->id,
+                        'title' => "Buku Kehabisan Stok (Perlu Restock)",
+                        'message' => "Buku '{$b->title}' karya {$b->author} saat ini kehabisan stok (0). Klik notifikasi ini untuk mengedit / melakukan restock.",
+                        'type' => 'warning',
+                        'related_id' => $b->id,
+                        'unread' => true,
+                        'time' => now()->toIso8601String()
+                    ]);
+                }
+            }
         }
 
         // Fetch Circulation Logs

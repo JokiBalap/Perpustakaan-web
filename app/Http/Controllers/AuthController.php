@@ -13,6 +13,37 @@ class AuthController extends Controller
         $ssoEmail = $request->header('X-Auth-Email');
         if ($ssoEmail) {
             $user = \DB::table('users')->where('email', $ssoEmail)->first();
+            if (!$user) {
+                // Determine role: default is Mahasiswa unless email contains keywords
+                $role = 'Mahasiswa';
+                $emailLower = strtolower($ssoEmail);
+                if (str_contains($emailLower, 'admin') || str_contains($emailLower, 'librarian') || str_contains($emailLower, 'pustakawan') || str_contains($emailLower, 'candra')) {
+                    $role = 'Pustakawan';
+                }
+                
+                $name = ucwords(explode('@', $ssoEmail)[0]);
+                $name = preg_replace('/[^a-zA-Z\s]/', '', $name);
+                if (empty($name)) {
+                    $name = 'User SSO';
+                }
+
+                $userId = \DB::table('users')->insertGetId([
+                    'name' => $name,
+                    'email' => $ssoEmail,
+                    'nim' => 'SSO-' . rand(10000, 99999),
+                    'phone' => '-',
+                    'faculty' => 'Teknologi',
+                    'prodi' => 'Teknik Informatika',
+                    'role' => $role,
+                    'wishlist' => '[]',
+                    'password' => \Illuminate\Support\Facades\Hash::make('password123'),
+                    'password_plain' => 'password123',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                $user = \DB::table('users')->where('id', $userId)->first();
+            }
+
             if ($user) {
                 Auth::loginUsingId($user->id);
                 $request->session()->regenerate();

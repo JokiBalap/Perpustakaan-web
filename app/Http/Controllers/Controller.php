@@ -13,7 +13,6 @@ class Controller extends BaseController
 
     protected function CarbonSimDate()
     {
-        $offsetDays = session('sim_date_offset', 0);
-        return \Carbon\Carbon::now()->addDays($offsetDays);
+        return \Carbon\Carbon::now();
     }
 }

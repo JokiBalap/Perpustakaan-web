@@ -56,6 +56,9 @@
           <button v-if="currentUser.role === 'Pustakawan'" @click="setViewTab('admin-backup')" :class="['px-3 py-2 text-sm font-semibold rounded-lg transition-colors flex items-center gap-2', activeTab === 'admin-backup' ? 'bg-teal text-white' : 'hover:bg-midnight-light text-parchment text-opacity-80']">
             <i class="fa-solid fa-cloud-arrow-up"></i> Backup Data
           </button>
+          <a v-if="currentUser.role === 'Mahasiswa'" href="https://drive.google.com/drive/folders/1k0oyuX4CWvlnt_zppvbwHUWEnsz_132i" target="_blank" rel="noopener noreferrer" class="px-3 py-2 text-sm font-semibold rounded-lg transition-all duration-300 hover:bg-midnight-light text-teal-light hover:text-white flex items-center gap-2 border border-teal/20 hover:border-teal/50 shadow-sm bg-teal/5">
+            <i class="fa-solid fa-graduation-cap text-teal-light animate-pulse"></i> Kumpul Skripsi
+          </a>
           <button @click="setViewTab('notifications')" :class="['px-3 py-2 text-sm font-semibold rounded-lg transition-colors flex items-center gap-2 relative', activeTab === 'notifications' ? 'bg-teal text-white' : 'hover:bg-midnight-light text-parchment text-opacity-80']">
             <i class="fa-solid fa-bell"></i> Notifikasi
             <span v-if="unreadNotifsCount > 0" class="absolute -top-1 -right-1 bg-danger text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold border-2 border-midnight">
@@ -82,22 +85,13 @@
       </div>
     </header>
 
-    <!-- DATE SIMULATION BAR -->
+    <!-- CURRENT DATE BAR -->
     <div :class="['bg-gradient-to-r from-midnight-light via-midnight to-midnight-light border-b border-teal/15 py-1.5 px-3 shadow-inner', currentUser && currentUser.role === 'Mahasiswa' ? 'hidden md:block' : '']">
-      <div class="max-w-7xl mx-auto flex items-center justify-between gap-2 text-white text-[11px] md:text-xs">
+      <div class="max-w-7xl mx-auto flex items-center justify-center text-white text-[11px] md:text-xs">
         <!-- Clock widget with dynamic pulsing/spinning effect -->
-        <div class="flex items-center gap-1.5 bg-white bg-opacity-5 px-3 py-1 rounded-full border border-white/10 hover:border-teal/30 transition-all duration-300">
+        <div class="flex items-center gap-1.5 bg-white bg-opacity-5 px-4 py-1 rounded-full border border-white/10 hover:border-teal/30 transition-all duration-300">
           <i class="fa-solid fa-clock text-teal-light animate-spin-slow text-xs"></i>
           <span class="font-mono font-bold text-teal-light tracking-wide" id="sim-current-date-badge">{{ formattedSimDate }}</span>
-        </div>
-        <!-- Time Travel buttons grouped inside a sleek pill -->
-        <div class="flex items-center gap-1.5 bg-white bg-opacity-5 p-0.5 rounded-full border border-white/10">
-          <button @click="simulateTime(1)" class="px-3 py-1 bg-teal/20 hover:bg-teal text-white text-[10px] md:text-xs font-bold rounded-full transition-all duration-300 transform active:scale-95 shadow-sm border border-teal/30 hover:border-teal flex items-center gap-1">
-            <i class="fa-solid fa-forward-step text-[9px] md:text-xs"></i> +1 Hari
-          </button>
-          <button @click="simulateTime(7)" class="px-3 py-1 bg-teal/20 hover:bg-teal text-white text-[10px] md:text-xs font-bold rounded-full transition-all duration-300 transform active:scale-95 shadow-sm border border-teal/30 hover:border-teal flex items-center gap-1">
-            <i class="fa-solid fa-forward text-[9px] md:text-xs"></i> +7 Hari
-          </button>
         </div>
       </div>
     </div>
@@ -401,6 +395,9 @@
               <p class="text-xs text-teal font-bold uppercase mt-2 tracking-wider">{{ currentUser.prodi || 'Departemen Perpustakaan' }}</p>
             </div>
             <div class="pt-2 border-t border-parchment-dark space-y-2">
+              <a v-if="currentUser.role === 'Mahasiswa'" href="https://drive.google.com/drive/folders/1k0oyuX4CWvlnt_zppvbwHUWEnsz_132i" target="_blank" rel="noopener noreferrer" class="w-full py-2 bg-teal hover:bg-teal-dark text-white rounded font-bold text-xs shadow transition-colors flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-graduation-cap"></i> Pengumpulan Skripsi
+              </a>
               <button @click="openChangePasswordModal" class="w-full py-2 bg-midnight hover:bg-black text-white rounded font-bold text-xs shadow transition-colors flex items-center justify-center gap-1.5">
                 <i class="fa-solid fa-key"></i> Ubah Kata Sandi
               </button>
@@ -412,6 +409,24 @@
 
           <!-- Right side: Stats and tables -->
           <div class="md:col-span-3 space-y-6">
+            <!-- Out of Stock Notifications in Dashboard for Admin -->
+            <div v-if="currentUser.role === 'Pustakawan' && librarianModeActive && outOfStockBooks.length > 0" class="space-y-3 animate-fadeIn">
+              <div v-for="book in outOfStockBooks" :key="'dash-notif-' + book.id" @click="openEditBookModal(book)" class="p-4 bg-danger/5 hover:bg-danger/10 border border-danger/25 hover:border-danger/40 rounded-xl flex items-center justify-between gap-4 cursor-pointer transition-all duration-300 shadow-sm">
+                <div class="flex items-center gap-3">
+                  <div class="shrink-0 h-10 w-10 rounded-full bg-danger text-white flex items-center justify-center shadow-sm">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                  </div>
+                  <div class="text-left">
+                    <h5 class="text-xs font-bold text-danger">Buku Kehabisan Stok (Perlu Restock)</h5>
+                    <p class="text-[11px] text-midnight opacity-80 mt-0.5">Buku '{{ book.title }}' karya {{ book.author }} saat ini kehabisan stok (0).</p>
+                  </div>
+                </div>
+                <button class="px-3 py-1.5 bg-danger hover:bg-danger-dark text-white rounded font-bold text-xs shadow-sm transition-colors flex items-center gap-1">
+                  <i class="fa-solid fa-edit"></i> Edit / Restock
+                </button>
+              </div>
+            </div>
+
             <!-- Stats cards -->
             <div class="grid grid-cols-3 gap-4">
               <div class="bg-white p-4 rounded-xl border border-parchment-dark shadow-sm text-center">
@@ -706,9 +721,14 @@
                         </td>
                         <td class="px-4 py-3"><span class="px-2 py-0.5 bg-danger/10 text-danger rounded-full font-bold">Habis (0 / {{ book.totalStock }})</span></td>
                         <td class="px-4 py-3">
-                          <button @click="restockBook(book.id)" class="px-3 py-1.5 bg-teal hover:bg-teal-dark text-white rounded font-bold flex items-center gap-1">
-                            <i class="fa-solid fa-plus-square"></i> Restock
-                          </button>
+                          <div class="flex gap-2">
+                            <button @click="restockBook(book.id)" class="px-2.5 py-1.5 bg-teal hover:bg-teal-dark text-white rounded font-bold flex items-center gap-1" title="Restock +1">
+                              <i class="fa-solid fa-plus-square"></i> Restock
+                            </button>
+                            <button @click="openEditBookModal(book)" class="px-2.5 py-1.5 bg-midnight hover:bg-black text-white rounded font-bold flex items-center gap-1">
+                              <i class="fa-solid fa-edit"></i> Edit
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     </template>
@@ -1722,7 +1742,7 @@ export default {
     formattedSimDate() {
       if (!this.currentSimTime) return '';
       const date = new Date(this.currentSimTime);
-      const datePart = date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+      const datePart = date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
       const timePart = date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       return `${datePart}, ${timePart}`;
     },
@@ -1779,19 +1799,11 @@ export default {
       return result;
     }
   },
-  watch: {
-    simDateStr(newVal) {
-      if (newVal) {
-        this.currentSimTime = new Date(newVal).getTime();
-      }
-    }
-  },
   created() {
+    this.currentSimTime = Date.now();
     this.fetchState();
     this.simTimerInterval = setInterval(() => {
-      if (this.currentSimTime) {
-        this.currentSimTime += 1000;
-      }
+      this.currentSimTime = Date.now();
     }, 1000);
     this.pollingInterval = setInterval(() => {
       this.fetchState();
@@ -1944,7 +1956,7 @@ export default {
     },
     getDaysDiff(dueDateStr) {
       const due = new Date(dueDateStr);
-      const current = new Date(this.simDateStr);
+      const current = new Date();
       const diffTime = due.getTime() - current.getTime();
       return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     },
@@ -1969,7 +1981,7 @@ export default {
     getProgressPercent(borrowDateStr, dueDateStr) {
       const borrow = new Date(borrowDateStr).getTime();
       const due = new Date(dueDateStr).getTime();
-      const current = new Date(this.simDateStr).getTime();
+      const current = new Date().getTime();
       const total = due - borrow;
       const passed = current - borrow;
       return Math.min(100, Math.max(0, (passed / total) * 100));
@@ -2064,6 +2076,15 @@ export default {
       }
     },
     async markNotificationRead(id) {
+      const notif = this.notifications.find(n => n.id === id);
+      if (notif && typeof id === 'string' && id.startsWith('restock-')) {
+        const bookId = notif.related_id;
+        const book = this.books.find(b => b.id === bookId);
+        if (book) {
+          this.openEditBookModal(book);
+        }
+        return;
+      }
       try {
         await axios.post(`/api/notifications/${id}/read`);
         await this.fetchState();
@@ -2305,7 +2326,7 @@ export default {
     // Librarian Loan CRUD
     openAddLoanModal() {
       this.editingId = null;
-      const today = new Date(this.simDateStr);
+      const today = new Date();
       const due = new Date(today);
       due.setDate(due.getDate() + 14);
 

@@ -77,7 +77,15 @@ class BackupController extends Controller
                 'loans.id',
                 'users.name as student_name',
                 'users.nim as student_nim',
+                'users.email as student_email',
+                'users.prodi as student_prodi',
+                'users.faculty as student_faculty',
+                'users.phone as student_phone',
+                'books.id as book_id',
                 'books.title as book_title',
+                'books.author as book_author',
+                'books.class_number as book_class_number',
+                'books.isbn as book_isbn',
                 'loans.borrow_date',
                 'loans.due_date',
                 'loans.status'
@@ -137,61 +145,119 @@ class BackupController extends Controller
             ]
         ];
 
-        // SHEET 1: Buku
+        // SHEET 1: Data Buku (matching UNU original file format)
         $sheetBooks = $spreadsheet->getActiveSheet();
-        $sheetBooks->setTitle('Katalog Buku');
-        $sheetBooks->setCellValue('A1', 'ID Buku');
-        $sheetBooks->setCellValue('B1', 'Judul');
-        $sheetBooks->setCellValue('C1', 'Penulis');
-        $sheetBooks->setCellValue('D1', 'Kategori/Genre');
-        $sheetBooks->setCellValue('E1', 'Stok Saat Ini');
-        $sheetBooks->setCellValue('F1', 'Total Stok');
-        $sheetBooks->setCellValue('G1', 'Tahun Terbit');
-        $sheetBooks->setCellValue('H1', 'Popularitas');
-        $sheetBooks->getStyle('A1:H1')->applyFromArray($headerStyle);
+        $sheetBooks->setTitle('Data Buku');
         
-        $row = 2;
+        $lastRow = count($books) + 5;
+        
+        // Write formulas and metadata into rows 1 to 4
+        $sheetBooks->setCellValue('F1', 'Jumlah data Nomor Induk');
+        $sheetBooks->setCellValue('G1', "=COUNTA(B6:B{$lastRow})");
+        $sheetBooks->setCellValue('H1', 'Jumlah Data');
+
+        $sheetBooks->setCellValue('F2', 'Jumlah data Nomor Klasifikasi');
+        $sheetBooks->setCellValue('G2', "=COUNTA(C6:C{$lastRow})");
+        $sheetBooks->setCellValue('H2', '=IF(H3=H4,"Sama","Tidak Sama")');
+
+        $sheetBooks->setCellValue('F3', 'Jumlah data Judul Buku');
+        $sheetBooks->setCellValue('G3', "=COUNTA(F6:F{$lastRow})");
+        $sheetBooks->setCellValue('H3', '=SUM(G1:G4)');
+
+        $sheetBooks->setCellValue('F4', 'Jumlah data Pengarang');
+        $sheetBooks->setCellValue('G4', "=COUNTA(G6:G{$lastRow})");
+        $sheetBooks->setCellValue('H4', '=G1*4');
+
+        // Headers on row 5
+        $sheetBooks->setCellValue('A5', 'Column1');
+        $sheetBooks->setCellValue('B5', 'ISBN/ISSN');
+        $sheetBooks->setCellValue('C5', 'No. Klasifikasi');
+        $sheetBooks->setCellValue('D5', '3 Huruf DepanTajuk');
+        $sheetBooks->setCellValue('E5', '1 Huruf Judul Buku');
+        $sheetBooks->setCellValue('F5', 'Judul Buku');
+        $sheetBooks->setCellValue('G5', 'Pengarang');
+        $sheetBooks->setCellValue('H5', 'Tahun Terbit');
+        $sheetBooks->setCellValue('I5', 'Penerbit');
+        $sheetBooks->setCellValue('J5', 'Edisi /  Cetakan');
+        $sheetBooks->setCellValue('K5', 'ekslempar');
+        $sheetBooks->getStyle('A5:K5')->applyFromArray($headerStyle);
+        
+        $row = 6;
+        $no = 1;
         foreach ($books as $b) {
-            $sheetBooks->setCellValue('A' . $row, $b->id);
-            $sheetBooks->setCellValue('B' . $row, $b->title);
-            $sheetBooks->setCellValue('C' . $row, $b->author);
-            $sheetBooks->setCellValue('D' . $row, $b->genre);
-            $sheetBooks->setCellValue('E' . $row, $b->stock);
-            $sheetBooks->setCellValue('F' . $row, $b->total_stock);
-            $sheetBooks->setCellValue('G' . $row, $b->published_year);
-            $sheetBooks->setCellValue('H' . $row, $b->popularity);
-            $sheetBooks->getStyle("A{$row}:H{$row}")->applyFromArray($cellStyle);
+            $words = explode(' ', trim(preg_replace('/[^a-zA-Z\s]/', '', $b->author)));
+            $word = count($words) > 1 ? end($words) : reset($words);
+            $depanTajuk = strtoupper(substr(trim($word), 0, 3)) ?: '-';
+            
+            $cleanTitle = trim(preg_replace('/[^a-zA-Z]/', '', $b->title));
+            $satuHurufJudul = strtolower(substr($cleanTitle, 0, 1)) ?: '-';
+
+            // Extract publisher from description
+            $publisher = 'Penerbit';
+            if (preg_match('/diterbitkan oleh (.*?) pada tahun/i', $b->description, $matches)) {
+                $publisher = trim($matches[1]);
+            }
+
+            $sheetBooks->setCellValue('A' . $row, $no);
+            $sheetBooks->setCellValue('B' . $row, $b->isbn ?: '-');
+            $sheetBooks->setCellValue('C' . $row, $b->class_number ?: '-');
+            $sheetBooks->setCellValue('D' . $row, $depanTajuk);
+            $sheetBooks->setCellValue('E' . $row, $satuHurufJudul);
+            $sheetBooks->setCellValue('F' . $row, $b->title);
+            $sheetBooks->setCellValue('G' . $row, $b->author);
+            $sheetBooks->setCellValue('H' . $row, $b->published_year);
+            $sheetBooks->setCellValue('I' . $row, $publisher);
+            $sheetBooks->setCellValue('J' . $row, 'Cet. 1');
+            $sheetBooks->setCellValue('K' . $row, $b->total_stock);
+            $sheetBooks->getStyle("A{$row}:K{$row}")->applyFromArray($cellStyle);
             $row++;
+            $no++;
         }
-        foreach (range('A', 'H') as $col) {
+        foreach (range('A', 'K') as $col) {
             $sheetBooks->getColumnDimension($col)->setAutoSize(true);
         }
 
-        // SHEET 2: Peminjaman
+        // SHEET 2: Daftar Peminjaman (with complete student & book data)
         $sheetLoans = $spreadsheet->createSheet();
         $sheetLoans->setTitle('Daftar Peminjaman');
         $sheetLoans->setCellValue('A1', 'ID Pinjam');
-        $sheetLoans->setCellValue('B1', 'Nama Mahasiswa');
-        $sheetLoans->setCellValue('C1', 'NIM');
-        $sheetLoans->setCellValue('D1', 'Judul Buku');
-        $sheetLoans->setCellValue('E1', 'Tanggal Pinjam');
-        $sheetLoans->setCellValue('F1', 'Jatuh Tempo');
-        $sheetLoans->setCellValue('G1', 'Status');
-        $sheetLoans->getStyle('A1:G1')->applyFromArray($headerStyle);
+        $sheetLoans->setCellValue('B1', 'NIM');
+        $sheetLoans->setCellValue('C1', 'Nama Mahasiswa');
+        $sheetLoans->setCellValue('D1', 'Email');
+        $sheetLoans->setCellValue('E1', 'Program Studi');
+        $sheetLoans->setCellValue('F1', 'Fakultas');
+        $sheetLoans->setCellValue('G1', 'Nomor Telepon');
+        $sheetLoans->setCellValue('H1', 'ID Buku');
+        $sheetLoans->setCellValue('I1', 'Judul Buku');
+        $sheetLoans->setCellValue('J1', 'Pengarang');
+        $sheetLoans->setCellValue('K1', 'No. Klasifikasi (DDC)');
+        $sheetLoans->setCellValue('L1', 'ISBN/ISSN');
+        $sheetLoans->setCellValue('M1', 'Tanggal Pinjam');
+        $sheetLoans->setCellValue('N1', 'Jatuh Tempo');
+        $sheetLoans->setCellValue('O1', 'Status');
+        $sheetLoans->getStyle('A1:O1')->applyFromArray($headerStyle);
 
         $row = 2;
         foreach ($loans as $l) {
             $sheetLoans->setCellValue('A' . $row, $l->id);
-            $sheetLoans->setCellValue('B' . $row, $l->student_name);
-            $sheetLoans->setCellValue('C' . $row, $l->student_nim);
-            $sheetLoans->setCellValue('D' . $row, $l->book_title);
-            $sheetLoans->setCellValue('E' . $row, $l->borrow_date);
-            $sheetLoans->setCellValue('F' . $row, $l->due_date);
-            $sheetLoans->setCellValue('G' . $row, strtoupper($l->status));
-            $sheetLoans->getStyle("A{$row}:G{$row}")->applyFromArray($cellStyle);
+            $sheetLoans->setCellValue('B' . $row, $l->student_nim ?: '-');
+            $sheetLoans->setCellValue('C' . $row, $l->student_name);
+            $sheetLoans->setCellValue('D' . $row, $l->student_email ?: '-');
+            $sheetLoans->setCellValue('E' . $row, $l->student_prodi ?: '-');
+            $sheetLoans->setCellValue('F' . $row, $l->student_faculty ?: '-');
+            $sheetLoans->setCellValue('G' . $row, $l->student_phone ?: '-');
+            $sheetLoans->setCellValue('H' . $row, $l->book_id);
+            $sheetLoans->setCellValue('I' . $row, $l->book_title);
+            $sheetLoans->setCellValue('J' . $row, $l->book_author ?: '-');
+            $sheetLoans->setCellValue('K' . $row, $l->book_class_number ?: '-');
+            $sheetLoans->setCellValue('L' . $row, $l->book_isbn ?: '-');
+            $sheetLoans->setCellValue('M' . $row, $l->borrow_date);
+            $sheetLoans->setCellValue('N' . $row, $l->due_date);
+            $sheetLoans->setCellValue('O' . $row, strtoupper($l->status));
+            $sheetLoans->getStyle("A{$row}:O{$row}")->applyFromArray($cellStyle);
             $row++;
         }
-        foreach (range('A', 'G') as $col) {
+        foreach (range('A', 'O') as $col) {
             $sheetLoans->getColumnDimension($col)->setAutoSize(true);
         }
 

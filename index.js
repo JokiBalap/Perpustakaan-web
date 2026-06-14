@@ -1,31 +1,8 @@
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    const accept = request.headers.get("Accept") || "";
-    const isHtml = accept.includes("text/html");
 
-    // 1. Extract JWT from header or cookie
-    const jwt = request.headers.get("Cf-Access-Jwt-Assertion") || getCookie(request, "CF_Authorization");
-    if (!jwt) {
-      if (isHtml) {
-        return Response.redirect(`https://candra12.cloudflareaccess.com/cdn-cgi/access/login/${url.hostname}`, 302);
-      }
-      return new Response("Missing Cf-Access-Jwt-Assertion header or CF_Authorization cookie.", { status: 401 });
-    }
-
-    try {
-      const isValid = await verifyToken(jwt, env.JWKS_URL, env.AUDIENCE);
-      if (!isValid) {
-        if (isHtml) {
-          return Response.redirect(`https://candra12.cloudflareaccess.com/cdn-cgi/access/login/${url.hostname}`, 302);
-        }
-        return new Response("Invalid Cloudflare Access Token.", { status: 403 });
-      }
-    } catch (err) {
-      return new Response(`Error validating token: ${err.message}`, { status: 500 });
-    }
-
-    // 2. Proxy request to the active Cloudflare Tunnel URL
+    // Proxy request to the active Cloudflare Tunnel URL
     if (!env.TUNNEL_URL) {
       return new Response("Backend tunnel URL is not configured in Worker variables.", { status: 503 });
     }
@@ -34,14 +11,21 @@ export default {
     const proxyHeaders = new Headers(request.headers);
     proxyHeaders.delete("X-Auth-Email"); // Prevent header spoofing
 
-    try {
-      const parts = jwt.split('.');
-      const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-      if (payload && payload.email) {
-        proxyHeaders.set("X-Auth-Email", payload.email);
+    // Extract JWT from header or cookie
+    const jwt = request.headers.get("Cf-Access-Jwt-Assertion") || getCookie(request, "CF_Authorization");
+    if (jwt) {
+      try {
+        const isValid = await verifyToken(jwt, env.JWKS_URL, env.AUDIENCE);
+        if (isValid) {
+          const parts = jwt.split('.');
+          const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+          if (payload && payload.email) {
+            proxyHeaders.set("X-Auth-Email", payload.email);
+          }
+        }
+      } catch (err) {
+        console.error("Error validating token:", err);
       }
-    } catch (e) {
-      console.error("Error parsing JWT payload:", e);
     }
 
     const proxyRequest = new Request(targetUrl, {
