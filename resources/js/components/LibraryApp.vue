@@ -1874,7 +1874,7 @@ export default {
           this.librarianModeActive = true;
         }
       } catch (err) {
-        if (err.response && err.response.status === 401) {
+        if (err.response && (err.response.status === 401 || err.response.status === 419)) {
           window.location.href = '/login';
           return;
         }
